@@ -53,3 +53,10 @@ npx shadcn@latest add table
 npx shadcn@latest add accordion
 Create Next.js Application
 Add UI Components (shadcn/ui)
+
+
+The Key Insight:
+
+  The "border" you were seeing wasn't actually a border - it was the visual edge created by background opacity changes.     
+   When we removed all background changes and kept the navbar purely transparent, the visual separation disappeared
+  entirely.
