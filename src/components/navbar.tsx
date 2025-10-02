@@ -3,21 +3,10 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Home, Book, Heart, User, Search, Sparkles } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function Navbar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      setIsScrolled(scrollTop > 50);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const navItems = [
     {
@@ -53,11 +42,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 px-6 py-6 transition-all duration-300 ${
-      isScrolled 
-        ? 'bg-slate-900/95 backdrop-blur-md border-b border-white/10' 
-        : 'bg-transparent'
-    }`}>
+    <nav className="fixed top-0 left-0 right-0 z-50 w-full border-0 px-6 py-6">
       <div className="container mx-auto flex items-center justify-between">
         {/* Animated Logo and Title */}
         <div className="flex items-center gap-3 group cursor-pointer">
@@ -73,7 +58,7 @@ export default function Navbar() {
           </div>
           
           <div className="relative overflow-hidden">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent group-hover:from-purple-400 group-hover:via-pink-400 group-hover:to-orange-400 transition-all duration-500">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent group-hover:from-purple-400 group-hover:via-pink-400 group-hover:to-orange-400 transition-all duration-500 drop-shadow-lg">
               SnapCook
             </h1>
             <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-400 to-pink-400 group-hover:w-full transition-all duration-500"></div>
@@ -91,9 +76,8 @@ export default function Navbar() {
                 key={item.name}
                 variant="ghost"
                 className={`
-                  relative px-4 py-3 rounded-xl transition-all duration-300 group
-                  hover:scale-105 hover:shadow-lg
-                  ${isHovered ? 'shadow-xl' : ''}
+                  relative px-4 py-3 rounded-xl transition-all duration-300 group border-0 shadow-none
+                  hover:scale-105 focus:border-0 focus:shadow-none
                 `}
                 onMouseEnter={() => setHoveredItem(item.name)}
                 onMouseLeave={() => setHoveredItem(null)}
@@ -133,7 +117,7 @@ export default function Navbar() {
         </div>
 
         {/* CTA Button */}
-        <Button className="hidden md:flex bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+        <Button className="hidden md:flex bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl border-0 shadow-none focus:border-0 focus:shadow-none transition-all duration-300 hover:scale-105">
           <Sparkles className="w-4 h-4 mr-2" />
           Get Started
         </Button>
@@ -141,7 +125,7 @@ export default function Navbar() {
         {/* Mobile Menu Button */}
         <Button 
           variant="ghost" 
-          className="md:hidden p-2 text-white/90 hover:text-white"
+          className="md:hidden p-2 text-white/90 hover:text-white border-0 shadow-none focus:border-0 focus:shadow-none"
           onMouseEnter={() => setHoveredItem("menu")}
           onMouseLeave={() => setHoveredItem(null)}
         >
