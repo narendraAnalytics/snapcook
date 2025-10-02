@@ -42,7 +42,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
+    <nav className="relative z-50 px-6 py-6">
       <div className="container mx-auto flex items-center justify-between">
         {/* Animated Logo and Title */}
         <div className="flex items-center gap-3 group cursor-pointer">
@@ -58,10 +58,10 @@ export default function Navbar() {
           </div>
           
           <div className="relative overflow-hidden">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-red-500 to-pink-500 bg-clip-text text-transparent group-hover:from-purple-600 group-hover:via-pink-500 group-hover:to-orange-500 transition-all duration-500">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent group-hover:from-purple-400 group-hover:via-pink-400 group-hover:to-orange-400 transition-all duration-500">
               SnapCook
             </h1>
-            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-pink-500 group-hover:w-full transition-all duration-500"></div>
+            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-400 to-pink-400 group-hover:w-full transition-all duration-500"></div>
           </div>
         </div>
 
@@ -94,12 +94,12 @@ export default function Navbar() {
                 <div className="relative z-10 flex items-center gap-2">
                   <Icon className={`
                     w-5 h-5 transition-all duration-300
-                    ${isHovered ? 'text-white animate-bounce' : 'text-gray-700'}
+                    ${isHovered ? 'text-white animate-bounce' : 'text-white/90'}
                     group-hover:text-white group-hover:drop-shadow-lg
                   `} />
                   <span className={`
                     font-medium transition-all duration-300
-                    ${isHovered ? 'text-white' : 'text-gray-700'}
+                    ${isHovered ? 'text-white' : 'text-white/90'}
                     group-hover:text-white group-hover:drop-shadow-lg
                   `}>
                     {item.name}
@@ -118,7 +118,7 @@ export default function Navbar() {
         </div>
 
         {/* CTA Button */}
-        <Button className="hidden md:flex bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+        <Button className="hidden md:flex bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
           <Sparkles className="w-4 h-4 mr-2" />
           Get Started
         </Button>
@@ -126,7 +126,7 @@ export default function Navbar() {
         {/* Mobile Menu Button */}
         <Button 
           variant="ghost" 
-          className="md:hidden p-2"
+          className="md:hidden p-2 text-white/90 hover:text-white"
           onMouseEnter={() => setHoveredItem("menu")}
           onMouseLeave={() => setHoveredItem(null)}
         >
@@ -135,9 +135,9 @@ export default function Navbar() {
               space-y-1 transition-all duration-300
               ${hoveredItem === "menu" ? "transform rotate-45" : ""}
             `}>
-              <div className={`w-6 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300`}></div>
-              <div className={`w-6 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-300 ${hoveredItem === "menu" ? "opacity-0" : ""}`}></div>
-              <div className={`w-6 h-0.5 bg-gradient-to-r from-green-500 to-lime-500 transition-all duration-300`}></div>
+              <div className={`w-6 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 transition-all duration-300`}></div>
+              <div className={`w-6 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 transition-all duration-300 ${hoveredItem === "menu" ? "opacity-0" : ""}`}></div>
+              <div className={`w-6 h-0.5 bg-gradient-to-r from-green-400 to-lime-400 transition-all duration-300`}></div>
             </div>
           </div>
         </Button>
