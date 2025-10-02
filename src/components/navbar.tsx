@@ -8,17 +8,27 @@ import { useState } from "react";
 export default function Navbar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
   const navItems = [
     {
       name: "Home",
       icon: Home,
-      href: "/",
+      sectionId: "home",
       gradient: "from-purple-500 via-pink-500 to-red-500"
     },
     {
       name: "Recipes",
       icon: Book,
-      href: "/recipes",
+      sectionId: "recipes",
       gradient: "from-blue-500 via-cyan-500 to-teal-500"
     },
     {
@@ -81,6 +91,7 @@ export default function Navbar() {
                 `}
                 onMouseEnter={() => setHoveredItem(item.name)}
                 onMouseLeave={() => setHoveredItem(null)}
+                onClick={() => item.sectionId && scrollToSection(item.sectionId)}
               >
                 {/* Background Gradient on Hover */}
                 <div className={`

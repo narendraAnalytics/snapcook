@@ -70,7 +70,7 @@ const featuredRecipes = [
 
 export default function RecipesSection() {
   return (
-    <section className="pt-0 pb-16 lg:pt-0 lg:pb-24 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
+    <section id="recipes" className="pt-0 pb-16 lg:pt-0 lg:pb-24 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
       <div className="container mx-auto px-6">
         <div className="max-w-6xl mx-auto">
           {/* Section Header */}

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, ChefHat } from "lucide-react";
 import Image from "next/image";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -17,7 +17,7 @@ export default function HeroSection() {
   ];
 
   return (
-    <section className="relative overflow-hidden min-h-[500px]">
+    <section id="home" className="relative overflow-hidden min-h-[500px]">
       {/* Background Image Carousel */}
       <div className="absolute -top-20 left-0 right-0 z-0" style={{height: 'calc(100% + 80px)'}}>
         <Carousel
@@ -32,10 +32,10 @@ export default function HeroSection() {
           ]}
           className="w-full h-full"
         >
-          <CarouselContent className="h-[720px]">
+          <CarouselContent className="h-[720px] gap-0 -ml-0">
             {carouselImages.map((image, index) => (
-              <CarouselItem key={index} className="h-[720px] basis-full">
-                <div className="relative w-full h-full min-h-[720px]">
+              <CarouselItem key={index} className="h-[720px] basis-full pl-0 shrink-0">
+                <div className="relative w-full h-full min-h-[720px] overflow-hidden">
                   <Image
                     src={image.src}
                     alt={image.alt}
@@ -91,9 +91,10 @@ export default function HeroSection() {
 
             {/* Call to Action Button */}
             <Card className="p-6 bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl">
-              <Button className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <Button className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group">
+                <ChefHat className="w-5 h-5 mr-2 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
                 Discover Recipes
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-2 group-hover:scale-110 transition-all duration-300" />
               </Button>
             </Card>
           </div>
