@@ -3,10 +3,21 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Home, Book, Heart, User, Search, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Navbar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navItems = [
     {
@@ -42,7 +53,11 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="relative z-50 px-6 py-6">
+    <nav className={`fixed top-0 left-0 right-0 z-50 px-6 py-6 transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-slate-900/95 backdrop-blur-md border-b border-white/10' 
+        : 'bg-transparent'
+    }`}>
       <div className="container mx-auto flex items-center justify-between">
         {/* Animated Logo and Title */}
         <div className="flex items-center gap-3 group cursor-pointer">
