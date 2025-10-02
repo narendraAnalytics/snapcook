@@ -93,12 +93,12 @@ export default function Navbar() {
                 <div className="relative z-10 flex items-center gap-2">
                   <Icon className={`
                     w-5 h-5 transition-all duration-300
-                    ${isHovered ? 'text-white animate-bounce' : 'text-white/90'}
+                    ${isHovered ? 'text-white animate-bounce' : 'text-orange-300'}
                     group-hover:text-white group-hover:drop-shadow-lg
                   `} />
                   <span className={`
                     font-medium transition-all duration-300
-                    ${isHovered ? 'text-white' : 'text-white/90'}
+                    ${isHovered ? 'text-white' : 'text-orange-300'}
                     group-hover:text-white group-hover:drop-shadow-lg
                   `}>
                     {item.name}
@@ -125,7 +125,7 @@ export default function Navbar() {
         {/* Mobile Menu Button */}
         <Button 
           variant="ghost" 
-          className="md:hidden p-2 text-white/90 hover:text-white border-0 shadow-none focus:border-0 focus:shadow-none"
+          className="md:hidden p-2 text-orange-300 hover:text-white border-0 shadow-none focus:border-0 focus:shadow-none"
           onMouseEnter={() => setHoveredItem("menu")}
           onMouseLeave={() => setHoveredItem(null)}
         >
