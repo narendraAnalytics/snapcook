@@ -120,3 +120,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .gradient-snapcook {
+    background: linear-gradient(135deg, #fef7ed 0%, #fef3c7 25%, #fde68a 50%, #fed7aa 75%, #fecaca 100%);
+  }
+  
+  .gradient-snapcook-light {
+    background: linear-gradient(135deg, #fffbeb 0%, #fefce8 25%, #fefbf3 50%, #fff7ed 75%, #fef2f2 100%);
+  }
+  
+  .gradient-text {
+    background: linear-gradient(135deg, #ea580c 0%, #dc2626 50%, #b91c1c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
