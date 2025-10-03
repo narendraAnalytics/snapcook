@@ -24,7 +24,13 @@ import {
   Plus,
   Sparkles,
   Home,
-  ArrowLeft
+  ArrowLeft,
+  CookingPot,
+  Timer,
+  Lightbulb,
+  CheckCircle,
+  Star,
+  Zap
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -46,30 +52,425 @@ export default function Dashboard() {
   const [generatedRecipe, setGeneratedRecipe] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  // Function to clean markdown formatting from AI response
-  const cleanMarkdownText = (text: string): string => {
-    return text
-      // Remove markdown headers (### ## #)
+  // Function to parse recipe into structured sections
+  interface RecipeSection {
+    type: 'title' | 'description' | 'ingredients' | 'instructions' | 'tips' | 'time' | 'text' | 'nutrition' | 'health' | 'pairing' | 'storage' | 'substitutions' | 'techniques';
+    content: string;
+    items?: string[];
+  }
+
+  const parseRecipe = (text: string): RecipeSection[] => {
+    const cleanText = text
       .replace(/^#{1,6}\s+/gm, '')
-      // Remove bold formatting (**text**)
       .replace(/\*\*(.*?)\*\*/g, '$1')
-      // Remove italic formatting (*text*)
       .replace(/\*(.*?)\*/g, '$1')
-      // Remove other markdown symbols and code blocks
-      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-      .replace(/`([^`]+)`/g, '$1') // Remove inline code
-      // Convert markdown lists to clean bullets
-      .replace(/^\*\s+/gm, '• ') // Convert * to bullet points
-      .replace(/^-\s+/gm, '• ') // Convert - to bullet points
-      .replace(/^\d+\.\s+/gm, (match, offset, string) => {
-        // Keep numbered lists but clean them up
-        const num = match.match(/\d+/)?.[0];
-        return `${num}. `;
-      })
-      // Clean up extra spaces and line breaks
-      .replace(/\n{3,}/g, '\n\n') // Reduce multiple line breaks
-      .replace(/\s{2,}/g, ' ') // Reduce multiple spaces
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`([^`]+)`/g, '$1')
       .trim();
+
+    const lines = cleanText.split('\n').filter(line => line.trim());
+    const sections: RecipeSection[] = [];
+    let currentSection: RecipeSection | null = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Detect title (first meaningful line)
+      if (i === 0 || (i === 1 && lines[0].length < 50)) {
+        sections.push({
+          type: 'title',
+          content: line
+        });
+        continue;
+      }
+
+      // Detect nutrition section
+      if ((line.toLowerCase().includes('nutrition') || line.toLowerCase().includes('calorie')) && line.length < 50) {
+        currentSection = {
+          type: 'nutrition',
+          content: line,
+          items: []
+        };
+        sections.push(currentSection);
+        continue;
+      }
+
+      // Detect ingredients section
+      if (line.toLowerCase().includes('ingredients') && line.length < 40) {
+        currentSection = {
+          type: 'ingredients',
+          content: line,
+          items: []
+        };
+        sections.push(currentSection);
+        continue;
+      }
+
+      // Detect instructions/method section
+      if ((line.toLowerCase().includes('instruction') || line.toLowerCase().includes('method') || line.toLowerCase().includes('steps') || line.toLowerCase().includes('preparation')) && line.length < 50) {
+        currentSection = {
+          type: 'instructions',
+          content: line,
+          items: []
+        };
+        sections.push(currentSection);
+        continue;
+      }
+
+      // Detect health benefits section
+      if ((line.toLowerCase().includes('health') || line.toLowerCase().includes('benefit') || line.toLowerCase().includes('therapeutic')) && line.length < 50) {
+        currentSection = {
+          type: 'health',
+          content: line,
+          items: []
+        };
+        sections.push(currentSection);
+        continue;
+      }
+
+      // Detect techniques section
+      if ((line.toLowerCase().includes('technique') || line.toLowerCase().includes('chef') || line.toLowerCase().includes('advanced')) && line.length < 50) {
+        currentSection = {
+          type: 'techniques',
+          content: line,
+          items: []
+        };
+        sections.push(currentSection);
+        continue;
+      }
+
+      // Detect substitutions section
+      if ((line.toLowerCase().includes('substitut') || line.toLowerCase().includes('alternative')) && line.length < 50) {
+        currentSection = {
+          type: 'substitutions',
+          content: line,
+          items: []
+        };
+        sections.push(currentSection);
+        continue;
+      }
+
+      // Detect pairing section
+      if ((line.toLowerCase().includes('pairing') || line.toLowerCase().includes('wine') || line.toLowerCase().includes('beverage')) && line.length < 50) {
+        currentSection = {
+          type: 'pairing',
+          content: line,
+          items: []
+        };
+        sections.push(currentSection);
+        continue;
+      }
+
+      // Detect storage section
+      if ((line.toLowerCase().includes('storage') || line.toLowerCase().includes('meal prep') || line.toLowerCase().includes('scaling')) && line.length < 50) {
+        currentSection = {
+          type: 'storage',
+          content: line,
+          items: []
+        };
+        sections.push(currentSection);
+        continue;
+      }
+
+      // Detect tips section
+      if (line.toLowerCase().includes('tip') && line.length < 40) {
+        currentSection = {
+          type: 'tips',
+          content: line,
+          items: []
+        };
+        sections.push(currentSection);
+        continue;
+      }
+
+      // Detect time/cooking info
+      if (line.toLowerCase().includes('time') || line.toLowerCase().includes('cook') || line.toLowerCase().includes('prep')) {
+        sections.push({
+          type: 'time',
+          content: line
+        });
+        continue;
+      }
+
+      // Handle list items
+      if (line.match(/^[•\-\*]\s+/) || line.match(/^\d+\.\s+/)) {
+        const cleanItem = line.replace(/^[•\-\*]\s+/, '').replace(/^\d+\.\s+/, '');
+        if (currentSection && currentSection.items) {
+          currentSection.items.push(cleanItem);
+        } else {
+          sections.push({
+            type: 'text',
+            content: cleanItem
+          });
+        }
+        continue;
+      }
+
+      // Regular paragraphs
+      if (line.length > 50) {
+        sections.push({
+          type: 'description',
+          content: line
+        });
+      } else if (line.length > 0) {
+        sections.push({
+          type: 'text',
+          content: line
+        });
+      }
+    }
+
+    return sections;
+  };
+
+  // Structured Recipe Display Component
+  const RecipeDisplay = ({ recipe }: { recipe: string }) => {
+    const sections = parseRecipe(recipe);
+
+    const getSectionIcon = (type: string) => {
+      switch (type) {
+        case 'title':
+          return <Star className="w-6 h-6 text-yellow-500 animate-pulse" />;
+        case 'nutrition':
+          return <Heart className="w-5 h-5 text-red-500 animate-pulse" />;
+        case 'ingredients':
+          return <CookingPot className="w-5 h-5 text-orange-500 animate-bounce" />;
+        case 'instructions':
+          return <ChefHat className="w-5 h-5 text-purple-500 animate-pulse" />;
+        case 'health':
+          return <Heart className="w-5 h-5 text-green-600 animate-bounce" />;
+        case 'techniques':
+          return <Star className="w-5 h-5 text-yellow-600 animate-pulse" />;
+        case 'substitutions':
+          return <Zap className="w-5 h-5 text-blue-500 animate-bounce" />;
+        case 'pairing':
+          return <Utensils className="w-5 h-5 text-purple-600 animate-pulse" />;
+        case 'storage':
+          return <Clock className="w-5 h-5 text-gray-600 animate-bounce" />;
+        case 'tips':
+          return <Lightbulb className="w-5 h-5 text-blue-500 animate-bounce" />;
+        case 'time':
+          return <Timer className="w-5 h-5 text-green-500 animate-pulse" />;
+        default:
+          return <Sparkles className="w-4 h-4 text-pink-500" />;
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        {sections.map((section, index) => (
+          <div key={index} className="animate-fadeIn" style={{animationDelay: `${index * 0.1}s`}}>
+            {section.type === 'title' && (
+              <div className="text-center mb-8">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  {getSectionIcon('title')}
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
+                    {section.content}
+                  </h1>
+                  {getSectionIcon('title')}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'description' && (
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border-l-4 border-blue-400">
+                <p className="text-gray-700 leading-relaxed text-lg italic">
+                  {section.content}
+                </p>
+              </div>
+            )}
+
+            {section.type === 'ingredients' && (
+              <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg p-6 border border-orange-200">
+                <div className="flex items-center gap-3 mb-4">
+                  {getSectionIcon('ingredients')}
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {section.content || 'Ingredients'}
+                  </h2>
+                </div>
+                <div className="grid gap-2">
+                  {section.items?.map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 bg-white/60 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="text-gray-700">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'instructions' && (
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200">
+                <div className="flex items-center gap-3 mb-4">
+                  {getSectionIcon('instructions')}
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {section.content || 'Instructions'}
+                  </h2>
+                </div>
+                <div className="space-y-3">
+                  {section.items?.map((step, i) => (
+                    <div key={i} className="flex gap-4 p-3 bg-white/60 rounded-lg">
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                        {i + 1}
+                      </div>
+                      <span className="text-gray-700 leading-relaxed">{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'nutrition' && (
+              <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-6 border border-red-200">
+                <div className="flex items-center gap-3 mb-4">
+                  {getSectionIcon('nutrition')}
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {section.content || 'Nutritional Information'}
+                  </h2>
+                </div>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {section.items?.map((info, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-white/70 rounded-lg">
+                      <Heart className="w-4 h-4 text-red-500" />
+                      <span className="text-gray-700 font-medium">{info}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'health' && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
+                <div className="flex items-center gap-3 mb-4">
+                  {getSectionIcon('health')}
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {section.content || 'Health Benefits'}
+                  </h2>
+                </div>
+                <div className="space-y-3">
+                  {section.items?.map((benefit, i) => (
+                    <div key={i} className="flex items-start gap-3 p-3 bg-white/70 rounded-lg">
+                      <Heart className="w-4 h-4 text-green-600 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700 leading-relaxed">{benefit}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'techniques' && (
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-6 border border-yellow-200">
+                <div className="flex items-center gap-3 mb-4">
+                  {getSectionIcon('techniques')}
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {section.content || 'Master Chef Techniques'}
+                  </h2>
+                </div>
+                <div className="space-y-3">
+                  {section.items?.map((technique, i) => (
+                    <div key={i} className="flex items-start gap-3 p-3 bg-white/70 rounded-lg">
+                      <Star className="w-4 h-4 text-yellow-600 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700 leading-relaxed">{technique}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'substitutions' && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+                <div className="flex items-center gap-3 mb-4">
+                  {getSectionIcon('substitutions')}
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {section.content || 'Ingredient Substitutions'}
+                  </h2>
+                </div>
+                <div className="space-y-2">
+                  {section.items?.map((sub, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2">
+                      <Zap className="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700">{sub}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'pairing' && (
+              <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg p-6 border border-purple-200">
+                <div className="flex items-center gap-3 mb-4">
+                  {getSectionIcon('pairing')}
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {section.content || 'Wine & Beverage Pairing'}
+                  </h2>
+                </div>
+                <div className="space-y-2">
+                  {section.items?.map((pairing, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2">
+                      <Utensils className="w-4 h-4 text-purple-600 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700">{pairing}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'storage' && (
+              <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-6 border border-gray-200">
+                <div className="flex items-center gap-3 mb-4">
+                  {getSectionIcon('storage')}
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {section.content || 'Storage & Meal Prep'}
+                  </h2>
+                </div>
+                <div className="space-y-2">
+                  {section.items?.map((storage, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2">
+                      <Clock className="w-4 h-4 text-gray-600 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700">{storage}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'tips' && (
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-6 border border-blue-200">
+                <div className="flex items-center gap-3 mb-4">
+                  {getSectionIcon('tips')}
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {section.content || 'Chef\'s Final Notes'}
+                  </h2>
+                </div>
+                <div className="space-y-2">
+                  {section.items?.map((tip, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2">
+                      <Lightbulb className="w-4 h-4 text-yellow-500 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700">{tip}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'time' && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                <div className="flex items-center gap-3">
+                  {getSectionIcon('time')}
+                  <span className="text-gray-700 font-medium">{section.content}</span>
+                </div>
+              </div>
+            )}
+
+            {section.type === 'text' && (
+              <div className="p-3">
+                <p className="text-gray-700 leading-relaxed">{section.content}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const healthConditions = [
@@ -584,18 +985,30 @@ export default function Dashboard() {
                 </div>
               )}
 
-              <div className="prose prose-lg max-w-none">
-                <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg p-6 border border-orange-100">
-                  <div className="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed text-base">
-                    {generatedRecipe ? cleanMarkdownText(generatedRecipe) : 'Your recipe will appear here...'}
+              <div className="max-w-none">
+                {generatedRecipe ? (
+                  <RecipeDisplay recipe={generatedRecipe} />
+                ) : (
+                  <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg p-6 border border-orange-100 text-center">
+                    <div className="flex items-center justify-center gap-2 text-gray-500">
+                      <ChefHat className="w-6 h-6 animate-pulse" />
+                      <span className="text-lg">Your recipe will appear here...</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {generatedRecipe && !isGenerating && (
                 <div className="mt-6 flex gap-3">
                   <Button 
-                    onClick={() => navigator.clipboard.writeText(cleanMarkdownText(generatedRecipe))}
+                    onClick={() => {
+                      const cleanText = generatedRecipe
+                        .replace(/^#{1,6}\s+/gm, '')
+                        .replace(/\*\*(.*?)\*\*/g, '$1')
+                        .replace(/\*(.*?)\*/g, '$1')
+                        .trim();
+                      navigator.clipboard.writeText(cleanText);
+                    }}
                     variant="outline"
                     className="text-orange-600 border-orange-300 hover:bg-orange-50"
                   >
@@ -637,6 +1050,37 @@ export default function Dashboard() {
           cursor: pointer;
           border: none;
           box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-out forwards;
+          opacity: 0;
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .animate-slideIn {
+          animation: slideIn 0.5s ease-out forwards;
         }
       `}</style>
     </div>

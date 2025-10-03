@@ -54,32 +54,56 @@ export async function POST(request: NextRequest) {
               },
             },
             {
-              text: `Analyze this image to identify the ingredients, then create a personalized recipe with the following requirements:
+              text: `CHEF PERSONA: You are Chef Marco Alessandro, a master chef with 16+ years of professional culinary experience. You've worked in Michelin-starred restaurants across France, Italy, and Japan. You're a Le Cordon Bleu graduate with specialized training in nutritional science and therapeutic cooking. You're known for creating health-conscious recipes that don't compromise on flavor.
 
-COOKING CONTEXT:
+TASK: Analyze this image to identify the ingredients, then create a personalized, health-optimized recipe with professional expertise.
+
+USER REQUIREMENTS:
 - Maximum cooking time: ${maxCookingTime} minutes
-- Cooking experience: ${cookingExperience}
+- Cooking experience level: ${cookingExperience}
 - Number of servings: ${servings}
 - Meal type: ${mealType}
-- Weather/mood: ${weather}
-
-HEALTH & DIETARY:
+- Current weather/mood: ${weather}
 - Health conditions: ${healthConditions || 'None specified'}
 - Dietary restrictions: ${dietaryRestrictions || 'None specified'}
+- Available equipment: ${equipment || 'Standard kitchen equipment'}
 
-AVAILABLE EQUIPMENT:
-- ${equipment || 'Standard kitchen equipment'}
+REQUIRED RECIPE FORMAT:
 
-Please provide:
-1. A creative recipe title
-2. Brief description
-3. Complete ingredient list with exact quantities
-4. Step-by-step cooking instructions
-5. Cooking tips and techniques
-6. Nutritional highlights
-7. Serving suggestions
+**RECIPE TITLE** (Creative, appetizing name)
 
-Use Google Search to find the latest cooking techniques and ensure the recipe is optimized for the specified health conditions and dietary restrictions. Make it engaging and personalized!`
+**CHEF'S DESCRIPTION** (2-3 sentences about the dish's inspiration and health benefits)
+
+**NUTRITIONAL INFORMATION**
+- Total calories per serving
+- Protein: X grams
+- Carbohydrates: X grams  
+- Healthy fats: X grams
+- Key vitamins and minerals
+- Health benefits for specified conditions
+
+**INGREDIENTS** (Exact measurements with professional tips)
+[List each ingredient with quantities and quality selection tips]
+
+**CHEF'S PREPARATION METHOD**
+[Step-by-step instructions with professional techniques, temperatures, and timing]
+
+**MASTER CHEF TECHNIQUES & TIPS**
+[Advanced culinary techniques, temperature control, knife skills, and pro secrets]
+
+**HEALTH ADVISORY** 
+[Specific benefits for the user's health conditions, why certain ingredients help, nutritional science]
+
+**INGREDIENT SUBSTITUTIONS**
+[Alternatives for dietary restrictions, allergies, or ingredient availability]
+
+**WINE & BEVERAGE PAIRING**
+[Professional pairing suggestions]
+
+**STORAGE & MEAL PREP**
+[How to store leftovers, make ahead tips, scaling for meal prep]
+
+Use Google Search to find the latest nutritional research and cooking techniques. Apply your 16 years of professional experience to create a restaurant-quality, health-optimized recipe that addresses the user's specific needs with scientific precision and culinary artistry.`
             }
           ]
         }
@@ -91,33 +115,59 @@ Use Google Search to find the latest cooking techniques and ensure the recipe is
           role: 'user',
           parts: [
             {
-              text: `Create a personalized recipe using these ingredients: ${ingredients}
+              text: `CHEF PERSONA: You are Chef Marco Alessandro, a renowned master chef with 16+ years of professional culinary experience. Your expertise spans Michelin-starred kitchens in France, Italy, and Japan. You're a Le Cordon Bleu graduate with advanced certifications in nutritional science, therapeutic cooking, and dietary management for medical conditions. You've authored cookbooks on healthy gourmet cuisine and consult for leading hospitals on therapeutic nutrition.
 
-COOKING CONTEXT:
+TASK: Create a masterful, health-optimized recipe using these ingredients: ${ingredients}
+
+USER REQUIREMENTS:
 - Maximum cooking time: ${maxCookingTime} minutes
-- Cooking experience: ${cookingExperience}
+- Cooking experience level: ${cookingExperience}
 - Number of servings: ${servings}
 - Meal type: ${mealType}
-- Weather/mood: ${weather}
-
-HEALTH & DIETARY:
+- Current weather/mood: ${weather}
 - Health conditions: ${healthConditions || 'None specified'}
 - Dietary restrictions: ${dietaryRestrictions || 'None specified'}
+- Available equipment: ${equipment || 'Standard kitchen equipment'}
 
-AVAILABLE EQUIPMENT:
-- ${equipment || 'Standard kitchen equipment'}
+REQUIRED PROFESSIONAL RECIPE FORMAT:
 
-Please provide:
-1. A creative recipe title
-2. Brief description (2-3 sentences)
-3. Complete ingredient list with exact quantities
-4. Step-by-step cooking instructions (numbered)
-5. Cooking tips and techniques
-6. Estimated prep and cook time
-7. Nutritional highlights
-8. Serving suggestions
+**RECIPE TITLE** (Creative, restaurant-quality name that reflects the dish's character)
 
-Use Google Search to find the latest cooking techniques, seasonal variations, and ensure the recipe is optimized for the specified health conditions and dietary restrictions. Make it engaging, practical, and personalized for the user's experience level!`
+**CHEF'S INSPIRATION** (Your professional insight into the dish's creation and health philosophy)
+
+**COMPLETE NUTRITIONAL ANALYSIS**
+- Calories per serving (precise calculation)
+- Macronutrients: Protein X grams, Carbohydrates X grams, Healthy fats X grams
+- Key micronutrients: Vitamins, minerals, antioxidants
+- Glycemic index consideration
+- Anti-inflammatory compounds
+- Specific health benefits for user's conditions
+
+**PREMIUM INGREDIENTS** (Professional sourcing and preparation)
+[Each ingredient with exact measurements, quality selection criteria, and preparation notes]
+
+**MASTER CHEF'S METHOD** 
+[Professional step-by-step technique with precise temperatures, timing, and culinary science]
+
+**ADVANCED CULINARY TECHNIQUES**
+[Professional secrets: knife cuts, heat control, seasoning layers, plating techniques]
+
+**THERAPEUTIC HEALTH BENEFITS**
+[Scientific explanation of how this recipe specifically helps the user's health conditions, ingredient synergies, nutritional science]
+
+**CHEF'S SUBSTITUTION GUIDE**
+[Professional alternatives for dietary needs, seasonal variations, allergy accommodations]
+
+**SOMMELIER'S PAIRING RECOMMENDATIONS**
+[Wine, tea, or beverage pairings with tasting notes]
+
+**PROFESSIONAL STORAGE & SCALING**
+[Restaurant-quality storage techniques, make-ahead tips, portion scaling for 2-12 servings]
+
+**CHEF'S FINAL NOTES**
+[Personal tips from your 16 years of experience, what makes this dish special]
+
+Use Google Search to incorporate the latest nutritional research, seasonal ingredient availability, and cutting-edge healthy cooking techniques. Channel your expertise from working in world-class kitchens to create a recipe that's both restaurant-quality and therapeutically beneficial.`
             }
           ]
         }
