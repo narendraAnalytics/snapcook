@@ -4,6 +4,8 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Home, Book, Heart, User, Search, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import SignInModal from "@/components/sign-in-modal";
 
 export default function Navbar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -128,10 +130,25 @@ export default function Navbar() {
         </div>
 
         {/* CTA Button */}
-        <Button className="hidden md:flex bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl border-0 shadow-none focus:border-0 focus:shadow-none transition-all duration-300 hover:scale-105">
-          <Sparkles className="w-4 h-4 mr-2" />
-          Get Started
-        </Button>
+        <div className="hidden md:flex">
+          <SignedOut>
+            <SignInModal>
+              <Button className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl border-0 shadow-none focus:border-0 focus:shadow-none transition-all duration-300 hover:scale-105">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Get Started
+              </Button>
+            </SignInModal>
+          </SignedOut>
+          <SignedIn>
+            <UserButton 
+              appearance={{
+                elements: {
+                  avatarBox: "w-10 h-10 hover:scale-105 transition-all duration-300"
+                }
+              }}
+            />
+          </SignedIn>
+        </div>
 
         {/* Mobile Menu Button */}
         <Button 
