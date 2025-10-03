@@ -42,6 +42,9 @@ export default function Dashboard() {
   const [servings, setServings] = useState(2);
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedRecipe, setGeneratedRecipe] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   const healthConditions = [
     'Diabetes', 'Hypertension', 'Heart Disease', 'High Cholesterol', 
@@ -73,22 +76,69 @@ export default function Dashboard() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted with:', {
-      inputMethod,
-      ingredients,
-      imageFile,
-      maxCookingTime,
-      cookingExperience,
-      selectedHealthConditions,
-      selectedDietaryRestrictions,
-      weather,
-      mealType,
-      servings,
-      selectedEquipment
-    });
+    setIsGenerating(true);
+    setError('');
+    setGeneratedRecipe('');
+
+    try {
+      // Validate required fields
+      if (inputMethod === 'text' && !ingredients.trim()) {
+        throw new Error('Please enter some ingredients');
+      }
+      if (inputMethod === 'image' && !imageFile) {
+        throw new Error('Please upload an image of your ingredients');
+      }
+
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('inputMethod', inputMethod);
+      formData.append('ingredients', ingredients);
+      if (imageFile) {
+        formData.append('imageFile', imageFile);
+      }
+      formData.append('maxCookingTime', maxCookingTime.toString());
+      formData.append('cookingExperience', cookingExperience);
+      formData.append('healthConditions', selectedHealthConditions.join(', '));
+      formData.append('dietaryRestrictions', selectedDietaryRestrictions.join(', '));
+      formData.append('weather', weather);
+      formData.append('mealType', mealType);
+      formData.append('servings', servings.toString());
+      formData.append('equipment', selectedEquipment.join(', '));
+
+      // Call the API
+      const response = await fetch('/api/generate-recipe', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate recipe');
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      let accumulatedText = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = new TextDecoder().decode(value);
+        accumulatedText += chunk;
+        setGeneratedRecipe(accumulatedText);
+      }
+
+    } catch (error) {
+      console.error('Recipe generation error:', error);
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -456,15 +506,90 @@ export default function Dashboard() {
             <div className="pt-6">
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
+                disabled={isGenerating}
+                className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                <Sparkles className="w-5 h-5 mr-2 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
-                Generate My Perfect Recipe
-                <ChefHat className="w-5 h-5 ml-2 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
+                <Sparkles className={`w-5 h-5 mr-2 transition-all duration-300 ${
+                  isGenerating 
+                    ? 'animate-spin' 
+                    : 'group-hover:rotate-12 group-hover:scale-110'
+                }`} />
+                {isGenerating ? 'Generating Your Perfect Recipe...' : 'Generate My Perfect Recipe'}
+                {!isGenerating && (
+                  <ChefHat className="w-5 h-5 ml-2 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
+                )}
               </Button>
             </div>
           </form>
         </Card>
+
+        {/* Error Display */}
+        {error && (
+          <Card className="max-w-4xl mx-auto mt-8 bg-red-50 border-red-200">
+            <div className="p-6">
+              <div className="flex items-center gap-2 text-red-700">
+                <X className="w-5 h-5" />
+                <span className="font-medium">Error</span>
+              </div>
+              <p className="text-red-600 mt-2">{error}</p>
+            </div>
+          </Card>
+        )}
+
+        {/* Recipe Display */}
+        {(generatedRecipe || isGenerating) && (
+          <Card className="max-w-4xl mx-auto mt-8 bg-white/90 backdrop-blur-md border-0 shadow-2xl">
+            <div className="p-8">
+              <div className="flex items-center gap-2 mb-6">
+                <ChefHat className={`w-6 h-6 text-orange-600 ${isGenerating ? 'animate-pulse' : ''}`} />
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {isGenerating ? 'Cooking up something amazing...' : 'Your Perfect Recipe'}
+                </h2>
+              </div>
+              
+              {isGenerating && (
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                  <span className="text-gray-600 text-sm">AI is analyzing your preferences and searching for the best techniques...</span>
+                </div>
+              )}
+
+              <div className="prose prose-lg max-w-none">
+                <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg p-6 border border-orange-100">
+                  <pre className="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed">
+                    {generatedRecipe || 'Your recipe will appear here...'}
+                  </pre>
+                </div>
+              </div>
+
+              {generatedRecipe && !isGenerating && (
+                <div className="mt-6 flex gap-3">
+                  <Button 
+                    onClick={() => navigator.clipboard.writeText(generatedRecipe)}
+                    variant="outline"
+                    className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                  >
+                    Copy Recipe
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setGeneratedRecipe('');
+                      setError('');
+                    }}
+                    variant="outline"
+                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                  >
+                    Generate Another
+                  </Button>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
       </div>
 
       <style jsx>{`
