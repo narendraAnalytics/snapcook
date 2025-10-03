@@ -9,9 +9,11 @@ import Autoplay from "embla-carousel-autoplay";
 import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import SignInModal from "@/components/sign-in-modal";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
   const { user } = useUser();
+  const router = useRouter();
 
   // Typewriter effect state
   const words = ["Optimized", "Simplified", "Perfected", "Enhanced", "Organized", "Streamlined"];
@@ -152,7 +154,10 @@ export default function HeroSection() {
                 </SignInModal>
               </SignedOut>
               <SignedIn>
-                <Button className="w-full bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group">
+                <Button 
+                  onClick={() => router.push('/dashboard')}
+                  className="w-full bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
+                >
                   <ChefHat className="w-5 h-5 mr-2 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
                   Welcome back, {user?.firstName || 'Chef'}!
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-2 group-hover:scale-110 transition-all duration-300" />

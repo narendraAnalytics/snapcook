@@ -3,7 +3,11 @@
 import { useUser } from '@clerk/nextjs'
 import { useEffect } from 'react'
 
-export default function UserSyncWrapper() {
+interface UserSyncWrapperProps {
+  children?: React.ReactNode;
+}
+
+export function UserSyncWrapper({ children }: UserSyncWrapperProps) {
   const { user, isLoaded } = useUser()
 
   useEffect(() => {
@@ -30,5 +34,7 @@ export default function UserSyncWrapper() {
     syncUser()
   }, [user, isLoaded])
 
-  return null // This component doesn't render anything
+  return children ? <>{children}</> : null
 }
+
+export default UserSyncWrapper
