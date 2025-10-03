@@ -8,9 +8,54 @@ import Image from "next/image";
 import Autoplay from "embla-carousel-autoplay";
 import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import SignInModal from "@/components/sign-in-modal";
+import { useState, useEffect } from "react";
 
 export default function HeroSection() {
   const { user } = useUser();
+
+  // Typewriter effect state
+  const words = ["Optimized", "Simplified", "Perfected", "Enhanced", "Organized", "Streamlined"];
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currentText, setCurrentText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showCursor, setShowCursor] = useState(true);
+
+  // Typewriter effect
+  useEffect(() => {
+    const currentWord = words[currentWordIndex];
+    
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        // Typing
+        if (currentText.length < currentWord.length) {
+          setCurrentText(currentWord.slice(0, currentText.length + 1));
+        } else {
+          // Word complete, wait then start deleting
+          setTimeout(() => setIsDeleting(true), 2000);
+        }
+      } else {
+        // Deleting
+        if (currentText.length > 0) {
+          setCurrentText(currentText.slice(0, -1));
+        } else {
+          // Word deleted, move to next word
+          setIsDeleting(false);
+          setCurrentWordIndex((prev) => (prev + 1) % words.length);
+        }
+      }
+    }, isDeleting ? 50 : 100); // Faster deletion, slower typing
+
+    return () => clearTimeout(timeout);
+  }, [currentText, isDeleting, currentWordIndex, words]);
+
+  // Cursor blinking effect
+  useEffect(() => {
+    const cursorInterval = setInterval(() => {
+      setShowCursor(prev => !prev);
+    }, 530);
+
+    return () => clearInterval(cursorInterval);
+  }, []);
 
   const carouselImages = [
     { src: "/images/BannerImage.png", alt: "SnapCook App Interface" },
@@ -80,7 +125,8 @@ export default function HeroSection() {
               <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight">
                 Your Kitchen,
                 <span className="block bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                  Optimized.
+                  {currentText}
+                  <span className={`${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-100`}>|</span>
                 </span>
               </h1>
               
