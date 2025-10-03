@@ -43,7 +43,7 @@ export default function HeroSection() {
           setCurrentWordIndex((prev) => (prev + 1) % words.length);
         }
       }
-    }, isDeleting ? 50 : 100); // Faster deletion, slower typing
+    }, isDeleting ? 50 : 100);
 
     return () => clearTimeout(timeout);
   }, [currentText, isDeleting, currentWordIndex, words]);
@@ -122,8 +122,10 @@ export default function HeroSection() {
                 <span className="text-white/90 text-sm font-medium">AI-Powered Cooking</span>
               </div>
               
-              <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight">
-                Your Kitchen,
+              <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
+                <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-yellow-300 bg-clip-text text-transparent">
+                  Your Kitchen,
+                </span>
                 <span className="block bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
                   {currentText}
                   <span className={`${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-100`}>|</span>
