@@ -46,6 +46,32 @@ export default function Dashboard() {
   const [generatedRecipe, setGeneratedRecipe] = useState<string>('');
   const [error, setError] = useState<string>('');
 
+  // Function to clean markdown formatting from AI response
+  const cleanMarkdownText = (text: string): string => {
+    return text
+      // Remove markdown headers (### ## #)
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bold formatting (**text**)
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      // Remove italic formatting (*text*)
+      .replace(/\*(.*?)\*/g, '$1')
+      // Remove other markdown symbols and code blocks
+      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+      .replace(/`([^`]+)`/g, '$1') // Remove inline code
+      // Convert markdown lists to clean bullets
+      .replace(/^\*\s+/gm, '• ') // Convert * to bullet points
+      .replace(/^-\s+/gm, '• ') // Convert - to bullet points
+      .replace(/^\d+\.\s+/gm, (match, offset, string) => {
+        // Keep numbered lists but clean them up
+        const num = match.match(/\d+/)?.[0];
+        return `${num}. `;
+      })
+      // Clean up extra spaces and line breaks
+      .replace(/\n{3,}/g, '\n\n') // Reduce multiple line breaks
+      .replace(/\s{2,}/g, ' ') // Reduce multiple spaces
+      .trim();
+  };
+
   const healthConditions = [
     'Diabetes', 'Hypertension', 'Heart Disease', 'High Cholesterol', 
     'Celiac Disease', 'Food Allergies', 'Kidney Disease', 'None'
@@ -560,16 +586,16 @@ export default function Dashboard() {
 
               <div className="prose prose-lg max-w-none">
                 <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg p-6 border border-orange-100">
-                  <pre className="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed">
-                    {generatedRecipe || 'Your recipe will appear here...'}
-                  </pre>
+                  <div className="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed text-base">
+                    {generatedRecipe ? cleanMarkdownText(generatedRecipe) : 'Your recipe will appear here...'}
+                  </div>
                 </div>
               </div>
 
               {generatedRecipe && !isGenerating && (
                 <div className="mt-6 flex gap-3">
                   <Button 
-                    onClick={() => navigator.clipboard.writeText(generatedRecipe)}
+                    onClick={() => navigator.clipboard.writeText(cleanMarkdownText(generatedRecipe))}
                     variant="outline"
                     className="text-orange-600 border-orange-300 hover:bg-orange-50"
                   >
