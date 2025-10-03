@@ -145,7 +145,7 @@ export default function Dashboard() {
                   variant={inputMethod === 'text' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setInputMethod('text')}
-                  className={inputMethod === 'text' ? 'bg-white shadow-sm' : ''}
+                  className={inputMethod === 'text' ? 'bg-white shadow-sm text-orange-600' : 'text-gray-700 hover:text-orange-600'}
                 >
                   <Type className="w-4 h-4 mr-2" />
                   Type Ingredients
@@ -155,7 +155,7 @@ export default function Dashboard() {
                   variant={inputMethod === 'image' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setInputMethod('image')}
-                  className={inputMethod === 'image' ? 'bg-white shadow-sm' : ''}
+                  className={inputMethod === 'image' ? 'bg-white shadow-sm text-orange-600' : 'text-gray-700 hover:text-orange-600'}
                 >
                   <Camera className="w-4 h-4 mr-2" />
                   Upload Photo
@@ -166,7 +166,7 @@ export default function Dashboard() {
               <div className="relative">
                 {inputMethod === 'text' ? (
                   <div>
-                    <Label htmlFor="ingredients" className="text-sm font-medium text-gray-700 mb-2 block">
+                    <Label htmlFor="ingredients" className="text-sm font-semibold text-gray-800 mb-2 block">
                       What ingredients do you have?
                     </Label>
                     <Textarea
@@ -174,12 +174,12 @@ export default function Dashboard() {
                       placeholder="e.g., chicken breast, broccoli, garlic, rice, onions..."
                       value={ingredients}
                       onChange={(e) => setIngredients(e.target.value)}
-                      className="min-h-[120px] resize-none border-gray-200 focus:border-orange-400 focus:ring-orange-400"
+                      className="min-h-[120px] resize-none border-gray-200 focus:border-orange-400 focus:ring-orange-400 placeholder:text-gray-600"
                     />
                   </div>
                 ) : (
                   <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                    <Label className="text-sm font-semibold text-gray-800 mb-2 block">
                       Upload a photo of your ingredients
                     </Label>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-orange-400 transition-colors">
@@ -193,6 +193,7 @@ export default function Dashboard() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setImageFile(null)}
+                              className="text-red-500 hover:text-red-600 hover:bg-red-50"
                             >
                               <X className="w-4 h-4" />
                             </Button>
@@ -210,7 +211,7 @@ export default function Dashboard() {
                               id="image-upload"
                             />
                             <label htmlFor="image-upload" className="cursor-pointer">
-                              <Button type="button" variant="outline" className="mb-2" asChild>
+                              <Button type="button" variant="outline" className="mb-2 text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400 bg-white hover:bg-orange-50" asChild>
                                 <span>
                                   <Camera className="w-4 h-4 mr-2" />
                                   Choose Photo
@@ -218,7 +219,7 @@ export default function Dashboard() {
                               </Button>
                             </label>
                           </div>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-700 font-medium">
                             Drag and drop or click to upload a photo of your ingredients
                           </p>
                         </div>
@@ -241,7 +242,7 @@ export default function Dashboard() {
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Maximum Cooking Time */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <Label className="text-sm font-semibold text-gray-800 mb-2 block">
                     Maximum Cooking Time: {maxCookingTime} minutes
                   </Label>
                   <input
@@ -261,12 +262,12 @@ export default function Dashboard() {
 
                 {/* Cooking Experience */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <Label className="text-sm font-semibold text-gray-800 mb-2 block">
                     Your Cooking Experience
                   </Label>
                   <Select value={cookingExperience} onValueChange={setCookingExperience}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your level" />
+                    <SelectTrigger className="text-gray-800">
+                      <SelectValue placeholder="Select your level" className="text-gray-600" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="beginner">Beginner - Simple recipes</SelectItem>
@@ -278,7 +279,7 @@ export default function Dashboard() {
 
                 {/* Number of Servings */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <Label className="text-sm font-semibold text-gray-800 mb-2 block">
                     Number of Servings
                   </Label>
                   <div className="flex items-center gap-2">
@@ -287,18 +288,20 @@ export default function Dashboard() {
                       variant="outline"
                       size="sm"
                       onClick={() => setServings(Math.max(1, servings - 1))}
+                      className="text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400"
                     >
                       -
                     </Button>
                     <span className="flex items-center gap-1 min-w-[60px] justify-center">
-                      <Users className="w-4 h-4 text-gray-500" />
-                      {servings}
+                      <Users className="w-4 h-4 text-gray-700" />
+                      <span className="text-gray-800 font-medium">{servings}</span>
                     </span>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => setServings(servings + 1)}
+                      className="text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400"
                     >
                       +
                     </Button>
@@ -307,12 +310,12 @@ export default function Dashboard() {
 
                 {/* Meal Type */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <Label className="text-sm font-semibold text-gray-800 mb-2 block">
                     Meal Type
                   </Label>
                   <Select value={mealType} onValueChange={setMealType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="What meal is this for?" />
+                    <SelectTrigger className="text-gray-800">
+                      <SelectValue placeholder="What meal is this for?" className="text-gray-600" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="breakfast">Breakfast</SelectItem>
@@ -338,7 +341,7 @@ export default function Dashboard() {
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Health Conditions */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                  <Label className="text-sm font-semibold text-gray-800 mb-3 block">
                     Health Conditions (Select all that apply)
                   </Label>
                   <div className="flex flex-wrap gap-2">
@@ -364,7 +367,7 @@ export default function Dashboard() {
 
                 {/* Dietary Restrictions */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                  <Label className="text-sm font-semibold text-gray-800 mb-3 block">
                     Dietary Restrictions (Select all that apply)
                   </Label>
                   <div className="flex flex-wrap gap-2">
@@ -402,12 +405,12 @@ export default function Dashboard() {
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Weather/Mood */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <Label className="text-sm font-semibold text-gray-800 mb-2 block">
                     What's the mood/weather like?
                   </Label>
                   <Select value={weather} onValueChange={setWeather}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select mood or weather" />
+                    <SelectTrigger className="text-gray-800">
+                      <SelectValue placeholder="Select mood or weather" className="text-gray-600" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="hot">Hot & Sunny - Light meals</SelectItem>
@@ -422,7 +425,7 @@ export default function Dashboard() {
 
                 {/* Available Equipment */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                  <Label className="text-sm font-semibold text-gray-800 mb-3 block">
                     Available Cooking Equipment
                   </Label>
                   <div className="flex flex-wrap gap-2">

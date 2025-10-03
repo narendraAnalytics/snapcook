@@ -15,6 +15,9 @@ export default function HeroSection() {
   const { user } = useUser();
   const router = useRouter();
 
+  // Loading state for navigation
+  const [isLoading, setIsLoading] = useState(false);
+
   // Typewriter effect state
   const words = ["Optimized", "Simplified", "Perfected", "Enhanced", "Organized", "Streamlined"];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -58,6 +61,19 @@ export default function HeroSection() {
 
     return () => clearInterval(cursorInterval);
   }, []);
+
+  // Handle navigation to dashboard with loading state
+  const handleDashboardNavigation = async () => {
+    setIsLoading(true);
+    try {
+      await router.push('/dashboard');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    } finally {
+      // Reset loading state after a small delay to show the animation
+      setTimeout(() => setIsLoading(false), 500);
+    }
+  };
 
   const carouselImages = [
     { src: "/images/BannerImage.png", alt: "SnapCook App Interface" },
@@ -155,12 +171,22 @@ export default function HeroSection() {
               </SignedOut>
               <SignedIn>
                 <Button 
-                  onClick={() => router.push('/dashboard')}
-                  className="w-full bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
+                  onClick={handleDashboardNavigation}
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  <ChefHat className="w-5 h-5 mr-2 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
-                  Welcome back, {user?.firstName || 'Chef'}!
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-2 group-hover:scale-110 transition-all duration-300" />
+                  <ChefHat className={`w-5 h-5 mr-2 transition-all duration-300 ${
+                    isLoading 
+                      ? 'animate-spin' 
+                      : 'group-hover:rotate-12 group-hover:scale-110'
+                  }`} />
+                  {isLoading 
+                    ? 'Loading Dashboard...' 
+                    : `Welcome back, ${user?.firstName || 'Chef'}!`
+                  }
+                  {!isLoading && (
+                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-2 group-hover:scale-110 transition-all duration-300" />
+                  )}
                 </Button>
               </SignedIn>
             </Card>
