@@ -35,7 +35,6 @@ import {
   Save,
   Menu,
   Search,
-  Trash2,
   Calendar,
   Eye
 } from "lucide-react";
@@ -692,6 +691,9 @@ export default function Dashboard() {
           console.log('Streaming finished. Final text length:', accumulatedText.length);
           console.log('Final accumulated text preview:', accumulatedText.substring(0, 200) + '...');
           setIsStreamingComplete(true);
+          
+          // Auto-save the generated recipe
+          await autoSaveRecipe(accumulatedText);
           break;
         }
         
@@ -732,6 +734,57 @@ export default function Dashboard() {
       console.error('Failed to fetch recipes:', error);
     } finally {
       setIsLoadingRecipes(false);
+    }
+  };
+
+  // Auto-save function for generated recipes
+  const autoSaveRecipe = async (recipeContent: string) => {
+    try {
+      // Extract title from recipe
+      const lines = recipeContent.split('\n');
+      const titleLine = lines.find(line => line.trim() && !line.startsWith('*'));
+      const title = titleLine?.replace(/^\*\*|\*\*$/g, '').trim() || 'Untitled Recipe';
+      
+      // Extract difficulty and cooking time if available
+      const difficultyMatch = recipeContent.match(/difficulty[:\s]*([^\n]*)/i);
+      const difficulty = difficultyMatch ? difficultyMatch[1].trim() : null;
+      
+      const recipeData = {
+        title,
+        content: recipeContent,
+        ingredients: ingredients,
+        preferences: {
+          maxCookingTime,
+          cookingExperience,
+          healthConditions: selectedHealthConditions,
+          dietaryRestrictions: selectedDietaryRestrictions,
+          weather,
+          mealType,
+          servings,
+          equipment: selectedEquipment
+        },
+        difficulty,
+        cookingTime: maxCookingTime,
+        servings: servings
+      };
+      
+      const response = await fetch('/api/save-recipe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(recipeData),
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        console.log('Recipe auto-saved successfully!', `Recipe #${data.recipe.recipeNumber}`);
+        // Refresh the saved recipes list
+        fetchSavedRecipes();
+      }
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      // Don't show error to user for auto-save - it's background operation
     }
   };
 
@@ -788,24 +841,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeleteRecipe = async (recipeId: string) => {
-    try {
-      const response = await fetch(`/api/save-recipe?id=${recipeId}`, {
-        method: 'DELETE',
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        fetchSavedRecipes(); // Refresh the list
-        if (selectedRecipe?.id === recipeId) {
-          setSelectedRecipe(null);
-        }
-      }
-    } catch (error) {
-      console.error('Delete recipe error:', error);
-    }
-  };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -941,15 +976,10 @@ export default function Dashboard() {
                             <Sparkles className="w-4 h-4 mr-2" />
                             Copy Recipe
                           </Button>
-                          <Button 
-                            onClick={handleSaveRecipe}
-                            disabled={isSaving}
-                            variant="outline"
-                            className="text-green-600 border-green-300 hover:bg-green-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base disabled:opacity-50"
-                          >
-                            <Save className={`w-4 h-4 mr-2 ${isSaving ? 'animate-pulse' : ''}`} />
-                            {isSaving ? 'Saving...' : 'Save Recipe'}
-                          </Button>
+                          <div className="flex items-center gap-2 bg-green-50 border border-green-200 px-4 py-2 rounded-xl">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span className="text-green-700 font-medium text-sm">Auto-saved to My Recipes</span>
+                          </div>
                           <Button 
                             onClick={handleReturnToForm}
                             className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
@@ -1527,7 +1557,7 @@ export default function Dashboard() {
                     >
                       <div className="flex items-start justify-between mb-3">
                         <h3 className="font-semibold text-gray-800 line-clamp-2 flex-1 mr-2 group-hover:text-purple-600 transition-colors">
-                          {recipe.title}
+                          <span className="text-purple-500 font-bold">#{recipe.recipeNumber}</span> {recipe.title}
                         </h3>
                         <div className="flex gap-1">
                           <Button
@@ -1538,19 +1568,9 @@ export default function Dashboard() {
                             variant="ghost"
                             size="sm"
                             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-full"
+                            title="View Recipe"
                           >
                             <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteRecipe(recipe.id);
-                            }}
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-full"
-                          >
-                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>

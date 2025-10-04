@@ -1,4 +1,4 @@
-import { integer, pgTable, varchar, timestamp, text } from "drizzle-orm/pg-core";
+import { integer, pgTable, varchar, timestamp, text, serial } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -10,6 +10,22 @@ export const usersTable = pgTable("users", {
   profileImage: text(),
   bio: text(),
   plan: varchar({ length: 20 }).default('free').notNull(),
+  createdAt: timestamp().defaultNow().notNull(),
+  updatedAt: timestamp().defaultNow().notNull(),
+});
+
+export const recipesTable = pgTable("recipes", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  clerkId: varchar({ length: 255 }).notNull(),
+  title: varchar({ length: 500 }).notNull(),
+  content: text().notNull(),
+  ingredients: text(),
+  preferences: text(),
+  difficulty: varchar({ length: 50 }),
+  cookingTime: integer(),
+  servings: integer(),
+  plan: varchar({ length: 20 }).default('free').notNull(),
+  recipeNumber: serial(),
   createdAt: timestamp().defaultNow().notNull(),
   updatedAt: timestamp().defaultNow().notNull(),
 });

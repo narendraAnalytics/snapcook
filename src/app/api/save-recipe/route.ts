@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-
-// Simple in-memory storage (in production, use a database)
-const recipes = new Map<string, any[]>();
+import { db } from '@/db';
+import { recipesTable } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,27 +13,24 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, content, ingredients, preferences } = body;
+    const { title, content, ingredients, preferences, difficulty, cookingTime, servings } = body;
 
     if (!title || !content) {
       return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
     }
 
-    // Create recipe object
-    const recipe = {
-      id: Date.now().toString(),
+    // Insert recipe into database
+    const [recipe] = await db.insert(recipesTable).values({
+      clerkId: userId,
       title,
       content,
-      ingredients,
-      preferences,
-      createdAt: new Date().toISOString(),
-      userId
-    };
-
-    // Get user's recipes or initialize empty array
-    const userRecipes = recipes.get(userId) || [];
-    userRecipes.push(recipe);
-    recipes.set(userId, userRecipes);
+      ingredients: typeof ingredients === 'string' ? ingredients : JSON.stringify(ingredients),
+      preferences: typeof preferences === 'string' ? preferences : JSON.stringify(preferences),
+      difficulty,
+      cookingTime,
+      servings,
+      plan: 'free' // Default plan
+    }).returning();
 
     return NextResponse.json({ 
       success: true, 
@@ -58,13 +55,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRecipes = recipes.get(userId) || [];
+    // Fetch user's recipes from database
+    const userRecipes = await db.select().from(recipesTable)
+      .where(eq(recipesTable.clerkId, userId))
+      .orderBy(desc(recipesTable.createdAt));
     
     return NextResponse.json({ 
       success: true, 
-      recipes: userRecipes.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
+      recipes: userRecipes
     });
 
   } catch (error) {
@@ -76,35 +74,3 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
-  try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const recipeId = searchParams.get('id');
-
-    if (!recipeId) {
-      return NextResponse.json({ error: 'Recipe ID is required' }, { status: 400 });
-    }
-
-    const userRecipes = recipes.get(userId) || [];
-    const filteredRecipes = userRecipes.filter(recipe => recipe.id !== recipeId);
-    recipes.set(userId, filteredRecipes);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Recipe deleted successfully!' 
-    });
-
-  } catch (error) {
-    console.error('Delete recipe error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete recipe. Please try again.' },
-      { status: 500 }
-    );
-  }
-}
