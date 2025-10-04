@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,14 @@ import {
   Lightbulb,
   CheckCircle,
   Star,
-  Zap
+  Zap,
+  BookOpen,
+  Save,
+  Menu,
+  Search,
+  Trash2,
+  Calendar,
+  Eye
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -53,6 +60,17 @@ export default function Dashboard() {
   const [error, setError] = useState<string>('');
   const [showRecipeView, setShowRecipeView] = useState(false);
   const [isStreamingComplete, setIsStreamingComplete] = useState(false);
+  
+  // Sidebar and recipe storage states
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [savedRecipes, setSavedRecipes] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [showSavedRecipeView, setShowSavedRecipeView] = useState(false);
+  const [savedRecipeContent, setSavedRecipeContent] = useState('');
+  const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
 
   // Function to parse recipe into structured sections
   interface RecipeSection {
@@ -701,6 +719,128 @@ export default function Dashboard() {
     setIsStreamingComplete(false);
   };
 
+  // Recipe storage functions
+  const fetchSavedRecipes = async () => {
+    setIsLoadingRecipes(true);
+    try {
+      const response = await fetch('/api/save-recipe');
+      const data = await response.json();
+      if (data.success) {
+        setSavedRecipes(data.recipes);
+      }
+    } catch (error) {
+      console.error('Failed to fetch recipes:', error);
+    } finally {
+      setIsLoadingRecipes(false);
+    }
+  };
+
+  const handleSaveRecipe = async () => {
+    if (!generatedRecipe) return;
+    
+    setIsSaving(true);
+    setSaveMessage('');
+    
+    try {
+      // Extract title from recipe
+      const lines = generatedRecipe.split('\n');
+      const titleLine = lines.find(line => line.trim() && !line.startsWith('*'));
+      const title = titleLine?.replace(/^\*\*|\*\*$/g, '').trim() || 'Untitled Recipe';
+      
+      const recipeData = {
+        title,
+        content: generatedRecipe,
+        ingredients: ingredients,
+        preferences: {
+          maxCookingTime,
+          cookingExperience,
+          healthConditions: selectedHealthConditions,
+          dietaryRestrictions: selectedDietaryRestrictions,
+          weather,
+          mealType,
+          servings,
+          equipment: selectedEquipment
+        }
+      };
+      
+      const response = await fetch('/api/save-recipe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(recipeData),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setSaveMessage('Recipe saved successfully!');
+        fetchSavedRecipes(); // Refresh the list
+        setTimeout(() => setSaveMessage(''), 3000);
+      } else {
+        setSaveMessage('Failed to save recipe');
+      }
+    } catch (error) {
+      console.error('Save recipe error:', error);
+      setSaveMessage('Failed to save recipe');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteRecipe = async (recipeId: string) => {
+    try {
+      const response = await fetch(`/api/save-recipe?id=${recipeId}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        fetchSavedRecipes(); // Refresh the list
+        if (selectedRecipe?.id === recipeId) {
+          setSelectedRecipe(null);
+        }
+      }
+    } catch (error) {
+      console.error('Delete recipe error:', error);
+    }
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+    if (!isSidebarOpen) {
+      fetchSavedRecipes();
+    }
+  };
+
+  const viewRecipeInSidebar = (recipe: any) => {
+    setSelectedRecipe(recipe);
+  };
+
+  const viewRecipeFullScreen = (recipe: any) => {
+    setSavedRecipeContent(recipe.content);
+    setShowSavedRecipeView(true);
+    setIsSidebarOpen(false); // Close sidebar
+  };
+
+  const handleBackToDashboard = () => {
+    setShowSavedRecipeView(false);
+    setSavedRecipeContent('');
+  };
+
+  const filteredRecipes = savedRecipes.filter(recipe =>
+    recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    recipe.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Load saved recipes on component mount
+  useEffect(() => {
+    if (user) {
+      fetchSavedRecipes();
+    }
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
       {showRecipeView ? (
@@ -776,30 +916,49 @@ export default function Dashboard() {
                     </div>
 
                     {generatedRecipe && !isGenerating && (
-                      <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-                        <Button 
-                          onClick={() => {
-                            const cleanText = generatedRecipe
-                              .replace(/^#{1,6}\s+/gm, '')
-                              .replace(/\*\*(.*?)\*\*/g, '$1')
-                              .replace(/\*(.*?)\*/g, '$1')
-                              .trim();
-                            navigator.clipboard.writeText(cleanText);
-                          }}
-                          variant="outline"
-                          className="text-orange-600 border-orange-300 hover:bg-orange-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
-                        >
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Copy Recipe
-                        </Button>
-                        <Button 
-                          onClick={handleReturnToForm}
-                          className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          <span className="hidden sm:inline">Generate Another Recipe</span>
-                          <span className="sm:hidden">Generate Another</span>
-                        </Button>
+                      <div className="mt-6 sm:mt-8 space-y-4">
+                        {saveMessage && (
+                          <div className="text-center">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm font-medium">
+                              <CheckCircle className="w-4 h-4" />
+                              {saveMessage}
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                          <Button 
+                            onClick={() => {
+                              const cleanText = generatedRecipe
+                                .replace(/^#{1,6}\s+/gm, '')
+                                .replace(/\*\*(.*?)\*\*/g, '$1')
+                                .replace(/\*(.*?)\*/g, '$1')
+                                .trim();
+                              navigator.clipboard.writeText(cleanText);
+                            }}
+                            variant="outline"
+                            className="text-orange-600 border-orange-300 hover:bg-orange-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                          >
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Copy Recipe
+                          </Button>
+                          <Button 
+                            onClick={handleSaveRecipe}
+                            disabled={isSaving}
+                            variant="outline"
+                            className="text-green-600 border-green-300 hover:bg-green-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base disabled:opacity-50"
+                          >
+                            <Save className={`w-4 h-4 mr-2 ${isSaving ? 'animate-pulse' : ''}`} />
+                            {isSaving ? 'Saving...' : 'Save Recipe'}
+                          </Button>
+                          <Button 
+                            onClick={handleReturnToForm}
+                            className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            <span className="hidden sm:inline">Generate Another Recipe</span>
+                            <span className="sm:hidden">Generate Another</span>
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -808,11 +967,89 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      ) : showSavedRecipeView ? (
+        // Full-Screen Saved Recipe View
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-viewTransition">
+          <div className="w-full h-full overflow-y-auto">
+            <div className="min-h-full flex flex-col">
+              {/* Header with Return Button */}
+              <div className="p-4 sticky top-0 z-10 animate-slideInLeft">
+                <div className="container mx-auto flex items-center justify-between">
+                  <Button
+                    onClick={handleBackToDashboard}
+                    variant="outline"
+                    className="group flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-100 hover:from-blue-100 hover:to-indigo-200 border-blue-200 hover:border-blue-300 shadow-lg hover:shadow-xl transition-all duration-300 px-3 py-2 rounded-xl text-blue-700 hover:text-blue-800 font-medium hover:scale-105 text-sm md:text-base md:px-4"
+                  >
+                    <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
+                    <span className="hidden sm:inline">Back to Dashboard</span>
+                    <span className="sm:hidden">Back</span>
+                  </Button>
+                  <Button
+                    onClick={() => router.push('/')}
+                    variant="outline"
+                    className="group flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-100 hover:from-green-100 hover:to-emerald-200 border-green-200 hover:border-green-300 shadow-lg hover:shadow-xl transition-all duration-300 px-3 py-2 rounded-xl text-green-700 hover:text-green-800 font-medium hover:scale-105 text-sm md:text-base md:px-4"
+                  >
+                    <Home className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                    <span className="hidden sm:inline">Home</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Centered Recipe Content */}
+              <div className="flex-1 flex items-center justify-center p-3 sm:p-6">
+                <div className="w-full max-w-4xl">
+                  {/* Recipe Display */}
+                  <div className="p-4 sm:p-6 md:p-8 animate-scaleIn">
+                    <div className="text-center mb-6 sm:mb-8">
+                      <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
+                        <ChefHat className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent text-center">
+                          Saved Recipe
+                        </h1>
+                        <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
+                      </div>
+                    </div>
+
+                    <div className="max-w-none">
+                      <RecipeDisplay recipe={savedRecipeContent} isStreamingComplete={true} />
+                    </div>
+
+                    <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                      <Button 
+                        onClick={() => {
+                          const cleanText = savedRecipeContent
+                            .replace(/^#{1,6}\\s+/gm, '')
+                            .replace(/\\*\\*(.*?)\\*\\*/g, '$1')
+                            .replace(/\\*(.*?)\\*/g, '$1')
+                            .trim();
+                          navigator.clipboard.writeText(cleanText);
+                        }}
+                        variant="outline"
+                        className="text-orange-600 border-orange-300 hover:bg-orange-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Copy Recipe
+                      </Button>
+                      <Button 
+                        onClick={handleBackToDashboard}
+                        className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        <span className="hidden sm:inline">Back to Dashboard</span>
+                        <span className="sm:hidden">Back</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
         // Original Form View
-        <div className="container mx-auto px-6 py-8">
-          {/* Home Button */}
-          <div className="mb-8">
+        <div className="container mx-auto px-6 py-8 relative">
+          {/* Header with Home and My Recipes buttons */}
+          <div className="mb-8 flex justify-between items-center">
             <Button
               onClick={() => router.push('/')}
               variant="outline"
@@ -823,6 +1060,19 @@ export default function Dashboard() {
                 <Home className="w-5 h-5" />
               </div>
               <span className="text-base">Back to Home</span>
+            </Button>
+            
+            {/* My Recipes Toggle Button */}
+            <Button
+              onClick={toggleSidebar}
+              variant="outline"
+              className="group flex items-center gap-3 bg-gradient-to-r from-purple-50 to-indigo-100 hover:from-purple-100 hover:to-indigo-200 border-purple-200 hover:border-purple-300 shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 rounded-xl text-purple-700 hover:text-purple-800 font-medium hover:scale-105"
+            >
+              <BookOpen className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+              <span className="text-base">My Recipes</span>
+              <div className="bg-purple-200 text-purple-800 text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                {savedRecipes.length}
+              </div>
             </Button>
           </div>
 
@@ -1204,8 +1454,214 @@ export default function Dashboard() {
           )}
         </div>
       )}
+      
+      {/* Animated Sidebar */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end animate-fadeIn">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm" 
+            onClick={toggleSidebar}
+          ></div>
+          
+          {/* Sidebar */}
+          <div className="relative w-full max-w-md sm:max-w-lg bg-white/95 backdrop-blur-md shadow-2xl h-full overflow-y-auto animate-slideInRight">
+            {/* Sidebar Header */}
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 p-6 text-white">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-6 h-6" />
+                  <h2 className="text-xl font-bold">My Saved Recipes</h2>
+                </div>
+                <Button
+                  onClick={toggleSidebar}
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/20 rounded-full p-2"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/70" />
+                <Input
+                  placeholder="Search recipes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30 focus:border-white/50"
+                />
+              </div>
+            </div>
+            
+            {/* Sidebar Content */}
+            <div className="p-6">
+              {isLoadingRecipes ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="flex items-center gap-3 text-gray-500">
+                    <ChefHat className="w-6 h-6 animate-spin" />
+                    <span>Loading recipes...</span>
+                  </div>
+                </div>
+              ) : filteredRecipes.length === 0 ? (
+                <div className="text-center py-12">
+                  <CookingPot className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                    {searchTerm ? 'No recipes found' : 'No saved recipes yet'}
+                  </h3>
+                  <p className="text-gray-500">
+                    {searchTerm ? 'Try a different search term' : 'Create your first recipe to get started!'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredRecipes.map((recipe, index) => (
+                    <div 
+                      key={recipe.id} 
+                      className="recipe-card bg-gradient-to-br from-white to-gray-50 rounded-xl p-4 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer group"
+                      style={{
+                        animationDelay: `${index * 0.1}s`,
+                        animation: `itemSlideIn 0.5s ease-out ${index * 0.1}s forwards`
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-gray-800 line-clamp-2 flex-1 mr-2 group-hover:text-purple-600 transition-colors">
+                          {recipe.title}
+                        </h3>
+                        <div className="flex gap-1">
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              viewRecipeFullScreen(recipe);
+                            }}
+                            variant="ghost"
+                            size="sm"
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-full"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteRecipe(recipe.id);
+                            }}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-full"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                        <Calendar className="w-4 h-4" />
+                        <span>{new Date(recipe.createdAt).toLocaleDateString()}</span>
+                        <span className="text-gray-300">•</span>
+                        <span className="capitalize">{recipe.preferences?.mealType || 'Recipe'}</span>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 line-clamp-3">
+                        {(recipe.content?.split('\n').find((line: string) => line.length > 50)?.slice(0, 100) || 'No preview available') + '...'}
+                      </p>
+                      
+                      <div className="mt-3 flex items-center gap-2">
+                        {(Array.isArray(recipe.preferences?.dietaryRestrictions) 
+                          ? recipe.preferences.dietaryRestrictions 
+                          : recipe.preferences?.dietaryRestrictions?.split(', ') || []
+                        ).slice(0, 2).map((restriction: string, i: number) => (
+                          <Badge key={i} variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                            {restriction}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        
+        .animate-slideInRight {
+          animation: slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        
+        .recipe-card {
+          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .recipe-card:hover {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        .animate-scaleIn {
+          animation: scaleIn 0.3s ease-out;
+        }
+
+        @keyframes itemSlideIn {
+          from {
+            opacity: 0;
+            transform: translateX(20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
         .slider::-webkit-slider-thumb {
           appearance: none;
           height: 20px;

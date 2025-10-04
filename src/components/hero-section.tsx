@@ -83,7 +83,36 @@ export default function HeroSection() {
   ];
 
   return (
-    <section id="home" className="relative overflow-hidden min-h-[500px]">
+    <>
+      <style jsx>{`
+        @keyframes chef-loading {
+          0% {
+            transform: rotate(0deg) scale(1);
+            opacity: 1;
+          }
+          25% {
+            transform: rotate(90deg) scale(1.2);
+            opacity: 0.8;
+          }
+          50% {
+            transform: rotate(180deg) scale(1.4);
+            opacity: 0.6;
+          }
+          75% {
+            transform: rotate(270deg) scale(1.2);
+            opacity: 0.8;
+          }
+          100% {
+            transform: rotate(360deg) scale(1);
+            opacity: 1;
+          }
+        }
+        
+        .animate-chef-loading {
+          animation: chef-loading 1s ease-in-out infinite;
+        }
+      `}</style>
+      <section id="home" className="relative overflow-hidden min-h-[500px]">
       {/* Background Image Carousel */}
       <div className="absolute -top-20 left-0 right-0 z-0" style={{height: 'calc(100% + 80px)'}}>
         <Carousel
@@ -177,7 +206,7 @@ export default function HeroSection() {
                 >
                   <ChefHat className={`w-5 h-5 mr-2 transition-all duration-300 ${
                     isLoading 
-                      ? 'animate-spin' 
+                      ? 'animate-chef-loading' 
                       : 'group-hover:rotate-12 group-hover:scale-110'
                   }`} />
                   {isLoading 
@@ -193,6 +222,7 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 }
