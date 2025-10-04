@@ -705,27 +705,27 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
       {showRecipeView ? (
         // Full-Screen Recipe View
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center animate-viewTransition">
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-viewTransition">
           <div className="w-full h-full overflow-y-auto">
             <div className="min-h-full flex flex-col">
               {/* Header with Return Button */}
-              <div className="bg-white/90 backdrop-blur-md border-b border-gray-200 p-4 sticky top-0 z-10 animate-slideInLeft">
+              <div className="p-4 sticky top-0 z-10 animate-slideInLeft">
                 <div className="container mx-auto flex items-center justify-between">
                   <Button
                     onClick={handleReturnToForm}
                     variant="outline"
-                    className="flex items-center gap-2 bg-white/90 backdrop-blur-md hover:bg-white border-gray-200 hover:border-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 px-3 py-2 rounded-xl text-gray-700 hover:text-orange-600 font-medium hover:scale-105 text-sm md:text-base md:px-4"
+                    className="group flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-100 hover:from-blue-100 hover:to-indigo-200 border-blue-200 hover:border-blue-300 shadow-lg hover:shadow-xl transition-all duration-300 px-3 py-2 rounded-xl text-blue-700 hover:text-blue-800 font-medium hover:scale-105 text-sm md:text-base md:px-4"
                   >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
                     <span className="hidden sm:inline">Back to Form</span>
                     <span className="sm:hidden">Back</span>
                   </Button>
                   <Button
                     onClick={() => router.push('/')}
                     variant="outline"
-                    className="flex items-center gap-2 bg-white/90 backdrop-blur-md hover:bg-white border-gray-200 hover:border-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 px-3 py-2 rounded-xl text-gray-700 hover:text-orange-600 font-medium hover:scale-105 text-sm md:text-base md:px-4"
+                    className="group flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-100 hover:from-green-100 hover:to-emerald-200 border-green-200 hover:border-green-300 shadow-lg hover:shadow-xl transition-all duration-300 px-3 py-2 rounded-xl text-green-700 hover:text-green-800 font-medium hover:scale-105 text-sm md:text-base md:px-4"
                   >
-                    <Home className="w-4 h-4" />
+                    <Home className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
                     <span className="hidden sm:inline">Home</span>
                   </Button>
                 </div>
@@ -735,7 +735,7 @@ export default function Dashboard() {
               <div className="flex-1 flex items-center justify-center p-3 sm:p-6">
                 <div className="w-full max-w-4xl">
                   {/* Recipe Display */}
-                  <div className="bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl border border-white/50 p-4 sm:p-6 md:p-8 animate-scaleIn">
+                  <div className="p-4 sm:p-6 md:p-8 animate-scaleIn">
                     <div className="text-center mb-6 sm:mb-8">
                       <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
                         <ChefHat className={`w-6 h-6 sm:w-8 sm:h-8 text-orange-600 ${isGenerating ? 'animate-pulse' : ''}`} />
