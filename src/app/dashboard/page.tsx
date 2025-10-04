@@ -56,7 +56,7 @@ export default function Dashboard() {
 
   // Function to parse recipe into structured sections
   interface RecipeSection {
-    type: 'title' | 'description' | 'ingredients' | 'instructions' | 'tips' | 'time' | 'text' | 'nutrition' | 'health' | 'pairing' | 'storage' | 'substitutions' | 'techniques';
+    type: 'title' | 'description' | 'ingredients' | 'instructions' | 'tips' | 'time' | 'text' | 'nutrition' | 'health' | 'pairing' | 'storage' | 'substitutions' | 'techniques' | 'difficulty';
     content: string;
     items?: string[];
   }
@@ -87,7 +87,7 @@ export default function Dashboard() {
       }
 
       // Detect nutrition section
-      if ((line.toLowerCase().includes('nutrition') || line.toLowerCase().includes('calorie')) && line.length < 50) {
+      if ((line.toLowerCase().includes('nutrition') || line.toLowerCase().includes('calorie') || line.toLowerCase().includes('macronutrient') || line.toLowerCase().includes('health benefit')) && line.length < 80) {
         currentSection = {
           type: 'nutrition',
           content: line,
@@ -185,6 +185,17 @@ export default function Dashboard() {
         continue;
       }
 
+      // Detect difficulty section
+      if ((line.toLowerCase().includes('difficulty') || line.toLowerCase().includes('skill level') || line.toLowerCase().includes('complexity') || line.toLowerCase().includes('skill requirement')) && line.length < 80) {
+        currentSection = {
+          type: 'difficulty',
+          content: line,
+          items: []
+        };
+        sections.push(currentSection);
+        continue;
+      }
+
       // Detect time/cooking info
       if (line.toLowerCase().includes('time') || line.toLowerCase().includes('cook') || line.toLowerCase().includes('prep')) {
         sections.push({
@@ -255,6 +266,8 @@ export default function Dashboard() {
           return <Clock className="w-5 h-5 text-gray-600 animate-bounce" />;
         case 'tips':
           return <Lightbulb className="w-5 h-5 text-blue-500 animate-bounce" />;
+        case 'difficulty':
+          return <Star className="w-5 h-5 text-indigo-600 animate-pulse" />;
         case 'time':
           return <Timer className="w-5 h-5 text-green-500 animate-pulse" />;
         default:
@@ -517,6 +530,36 @@ export default function Dashboard() {
                     <div key={i} className="flex items-start gap-3 p-2">
                       <Lightbulb className="w-4 h-4 text-yellow-500 mt-1 flex-shrink-0" />
                       <span className="text-gray-700">{tip}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {section.type === 'difficulty' && (
+              <div className="recipe-difficulty-card bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 rounded-2xl p-8 border-2 border-indigo-200 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 transform-gpu group">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    {getSectionIcon('difficulty')}
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {section.content || 'Recipe Difficulty & Skills'}
+                  </h2>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {section.items?.map((item, i) => (
+                    <div 
+                      key={i} 
+                      className="difficulty-item flex items-center gap-4 p-4 bg-white/80 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:bg-white/95 group/item border border-indigo-100 hover:border-indigo-300"
+                      style={isStreamingComplete ? {
+                        animationDelay: `${(index * 0.2) + (i * 0.1)}s`,
+                        animation: `itemSlideIn 0.5s ease-out ${(index * 0.2) + (i * 0.1)}s forwards`
+                      } : {}}
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-sm group-hover/item:shadow-md transition-all duration-200">
+                        <Star className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-gray-700 font-medium flex-1">{item}</span>
                     </div>
                   ))}
                 </div>

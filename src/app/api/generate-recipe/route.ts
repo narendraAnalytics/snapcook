@@ -100,6 +100,9 @@ REQUIRED RECIPE FORMAT:
 **WINE & BEVERAGE PAIRING**
 [Professional pairing suggestions]
 
+**RECIPE DIFFICULTY & SKILL REQUIREMENTS**
+[Rate difficulty level: Beginner/Intermediate/Advanced, required cooking skills, time investment, confidence-building tips for the user's experience level: ${cookingExperience}]
+
 **STORAGE & MEAL PREP**
 [How to store leftovers, make ahead tips, scaling for meal prep]
 
@@ -163,6 +166,9 @@ REQUIRED PROFESSIONAL RECIPE FORMAT:
 
 **PROFESSIONAL STORAGE & SCALING**
 [Restaurant-quality storage techniques, make-ahead tips, portion scaling for 2-12 servings]
+
+**RECIPE DIFFICULTY & SKILL REQUIREMENTS**
+[Rate difficulty level: Beginner/Intermediate/Advanced, required cooking skills, time investment, confidence-building tips for the user's experience level: ${cookingExperience}]
 
 **CHEF'S FINAL NOTES**
 [Personal tips from your 16 years of experience, what makes this dish special]
