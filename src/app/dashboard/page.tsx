@@ -51,6 +51,8 @@ export default function Dashboard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedRecipe, setGeneratedRecipe] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [showRecipeView, setShowRecipeView] = useState(false);
+  const [isStreamingComplete, setIsStreamingComplete] = useState(false);
 
   // Function to parse recipe into structured sections
   interface RecipeSection {
@@ -224,8 +226,12 @@ export default function Dashboard() {
   };
 
   // Structured Recipe Display Component
-  const RecipeDisplay = ({ recipe }: { recipe: string }) => {
+  const RecipeDisplay = ({ recipe, isStreamingComplete }: { recipe: string; isStreamingComplete: boolean }) => {
+    console.log('RecipeDisplay received recipe of length:', recipe.length);
+    console.log('Recipe preview:', recipe.substring(0, 100) + '...');
+    console.log('Is streaming complete:', isStreamingComplete);
     const sections = parseRecipe(recipe);
+    console.log('Parsed sections count:', sections.length);
 
     const getSectionIcon = (type: string) => {
       switch (type) {
@@ -257,42 +263,73 @@ export default function Dashboard() {
     };
 
     return (
-      <div className="space-y-6">
+      <div className="grid gap-6 md:gap-8">
         {sections.map((section, index) => (
-          <div key={index} className="animate-fadeIn" style={{animationDelay: `${index * 0.1}s`}}>
+          <div 
+            key={index} 
+            className={`recipe-card ${isStreamingComplete ? 'opacity-0 transform scale-95 translate-y-4' : 'opacity-100'}`}
+            style={isStreamingComplete ? {
+              animationDelay: `${index * 0.2}s`,
+              animationDuration: '0.7s',
+              animationFillMode: 'forwards',
+              animation: `cardSlideIn 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 0.2}s forwards`
+            } : {}}
+          >
             {section.type === 'title' && (
-              <div className="text-center mb-8">
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  {getSectionIcon('title')}
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
-                    {section.content}
-                  </h1>
-                  {getSectionIcon('title')}
+              <div className="recipe-title-card bg-gradient-to-r from-yellow-50 via-orange-50 to-pink-50 rounded-2xl p-8 border-2 border-yellow-200 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 transform-gpu">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-4 mb-4">
+                    {getSectionIcon('title')}
+                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
+                      {section.content}
+                    </h1>
+                    {getSectionIcon('title')}
+                  </div>
+                  <div className="w-24 h-1 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full mx-auto"></div>
                 </div>
               </div>
             )}
 
             {section.type === 'description' && (
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border-l-4 border-blue-400">
-                <p className="text-gray-700 leading-relaxed text-lg italic">
-                  {section.content}
-                </p>
+              <div className="recipe-description-card bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 border border-blue-200 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 transform-gpu group">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-3">Chef's Inspiration</h3>
+                    <p className="text-gray-700 leading-relaxed text-lg italic">
+                      {section.content}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
             {section.type === 'ingredients' && (
-              <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg p-6 border border-orange-200">
-                <div className="flex items-center gap-3 mb-4">
-                  {getSectionIcon('ingredients')}
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    {section.content || 'Ingredients'}
+              <div className="recipe-ingredients-card bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-2xl p-8 border-2 border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 transform-gpu group">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    {getSectionIcon('ingredients')}
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {section.content || 'Fresh Ingredients'}
                   </h2>
                 </div>
-                <div className="grid gap-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   {section.items?.map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 bg-white/60 rounded-lg">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-gray-700">{item}</span>
+                    <div 
+                      key={i} 
+                      className="ingredient-item flex items-center gap-4 p-4 bg-white/80 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:bg-white/95 group/item border border-orange-100 hover:border-orange-300"
+                      style={isStreamingComplete ? {
+                        animationDelay: `${(index * 0.2) + (i * 0.1)}s`,
+                        animation: `itemSlideIn 0.5s ease-out ${(index * 0.2) + (i * 0.1)}s forwards`
+                      } : {}}
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-sm group-hover/item:shadow-md transition-all duration-200">
+                        <CheckCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-gray-700 font-medium flex-1">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -300,20 +337,31 @@ export default function Dashboard() {
             )}
 
             {section.type === 'instructions' && (
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200">
-                <div className="flex items-center gap-3 mb-4">
-                  {getSectionIcon('instructions')}
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    {section.content || 'Instructions'}
+              <div className="recipe-instructions-card bg-gradient-to-br from-purple-50 via-violet-50 to-pink-50 rounded-2xl p-8 border-2 border-purple-200 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 transform-gpu group">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    {getSectionIcon('instructions')}
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {section.content || 'Cooking Instructions'}
                   </h2>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-5">
                   {section.items?.map((step, i) => (
-                    <div key={i} className="flex gap-4 p-3 bg-white/60 rounded-lg">
-                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                    <div 
+                      key={i} 
+                      className="instruction-step flex gap-5 p-5 bg-white/80 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:bg-white/95 group/step border border-purple-100 hover:border-purple-300"
+                      style={isStreamingComplete ? {
+                        animationDelay: `${(index * 0.2) + (i * 0.15)}s`,
+                        animation: `stepSlideIn 0.6s ease-out ${(index * 0.2) + (i * 0.15)}s forwards`
+                      } : {}}
+                    >
+                      <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg group-hover/step:shadow-xl transition-all duration-300 group-hover/step:scale-110">
                         {i + 1}
                       </div>
-                      <span className="text-gray-700 leading-relaxed">{step}</span>
+                      <div className="flex-1">
+                        <span className="text-gray-700 leading-relaxed font-medium text-lg">{step}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -321,18 +369,29 @@ export default function Dashboard() {
             )}
 
             {section.type === 'nutrition' && (
-              <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-6 border border-red-200">
-                <div className="flex items-center gap-3 mb-4">
-                  {getSectionIcon('nutrition')}
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    {section.content || 'Nutritional Information'}
+              <div className="recipe-nutrition-card bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 rounded-2xl p-8 border-2 border-red-200 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 transform-gpu group">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    {getSectionIcon('nutrition')}
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {section.content || 'Nutritional Powerhouse'}
                   </h2>
                 </div>
-                <div className="grid md:grid-cols-2 gap-3">
+                <div className="grid md:grid-cols-2 gap-4">
                   {section.items?.map((info, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-white/70 rounded-lg">
-                      <Heart className="w-4 h-4 text-red-500" />
-                      <span className="text-gray-700 font-medium">{info}</span>
+                    <div 
+                      key={i} 
+                      className="nutrition-item flex items-center gap-4 p-4 bg-white/80 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:bg-white/95 group/item border border-red-100 hover:border-red-300"
+                      style={isStreamingComplete ? {
+                        animationDelay: `${(index * 0.2) + (i * 0.1)}s`,
+                        animation: `itemSlideIn 0.5s ease-out ${(index * 0.2) + (i * 0.1)}s forwards`
+                      } : {}}
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-red-400 to-pink-500 rounded-full flex items-center justify-center shadow-sm group-hover/item:shadow-md transition-all duration-200">
+                        <Heart className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-gray-700 font-medium flex-1">{info}</span>
                     </div>
                   ))}
                 </div>
@@ -340,18 +399,29 @@ export default function Dashboard() {
             )}
 
             {section.type === 'health' && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
-                <div className="flex items-center gap-3 mb-4">
-                  {getSectionIcon('health')}
-                  <h2 className="text-xl font-semibold text-gray-800">
+              <div className="recipe-health-card bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-2xl p-8 border-2 border-green-200 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 transform-gpu group">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    {getSectionIcon('health')}
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">
                     {section.content || 'Health Benefits'}
                   </h2>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {section.items?.map((benefit, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 bg-white/70 rounded-lg">
-                      <Heart className="w-4 h-4 text-green-600 mt-1 flex-shrink-0" />
-                      <span className="text-gray-700 leading-relaxed">{benefit}</span>
+                    <div 
+                      key={i} 
+                      className="health-benefit flex items-start gap-4 p-4 bg-white/80 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:bg-white/95 group/item border border-green-100 hover:border-green-300"
+                      style={isStreamingComplete ? {
+                        animationDelay: `${(index * 0.2) + (i * 0.1)}s`,
+                        animation: `itemSlideIn 0.5s ease-out ${(index * 0.2) + (i * 0.1)}s forwards`
+                      } : {}}
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-sm group-hover/item:shadow-md transition-all duration-200 mt-1">
+                        <Heart className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-gray-700 leading-relaxed font-medium flex-1">{benefit}</span>
                     </div>
                   ))}
                 </div>
@@ -508,6 +578,8 @@ export default function Dashboard() {
     setIsGenerating(true);
     setError('');
     setGeneratedRecipe('');
+    setShowRecipeView(true);
+    setIsStreamingComplete(false);
 
     try {
       // Validate required fields
@@ -551,40 +623,165 @@ export default function Dashboard() {
       }
 
       let accumulatedText = '';
+      console.log('Starting to read streaming response...');
+      
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          console.log('Streaming finished. Final text length:', accumulatedText.length);
+          console.log('Final accumulated text preview:', accumulatedText.substring(0, 200) + '...');
+          setIsStreamingComplete(true);
+          break;
+        }
         
         const chunk = new TextDecoder().decode(value);
+        console.log('Received chunk of length:', chunk.length);
         accumulatedText += chunk;
+        console.log('Total accumulated length:', accumulatedText.length);
         setGeneratedRecipe(accumulatedText);
       }
 
     } catch (error) {
       console.error('Recipe generation error:', error);
       setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      setShowRecipeView(false);
     } finally {
       setIsGenerating(false);
     }
   };
 
+  const handleReturnToForm = () => {
+    setShowRecipeView(false);
+    setGeneratedRecipe('');
+    setError('');
+    setIsGenerating(false);
+    setIsStreamingComplete(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
-      <div className="container mx-auto px-6 py-8">
-        {/* Home Button */}
-        <div className="mb-8">
-          <Button
-            onClick={() => router.push('/')}
-            variant="outline"
-            className="flex items-center gap-3 bg-white/90 backdrop-blur-md hover:bg-white border-gray-200 hover:border-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 rounded-xl text-gray-700 hover:text-orange-600 font-medium hover:scale-105"
-          >
-            <div className="flex items-center gap-2">
-              <ArrowLeft className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" />
-              <Home className="w-5 h-5" />
+      {showRecipeView ? (
+        // Full-Screen Recipe View
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center animate-viewTransition">
+          <div className="w-full h-full overflow-y-auto">
+            <div className="min-h-full flex flex-col">
+              {/* Header with Return Button */}
+              <div className="bg-white/90 backdrop-blur-md border-b border-gray-200 p-4 sticky top-0 z-10 animate-slideInLeft">
+                <div className="container mx-auto flex items-center justify-between">
+                  <Button
+                    onClick={handleReturnToForm}
+                    variant="outline"
+                    className="flex items-center gap-2 bg-white/90 backdrop-blur-md hover:bg-white border-gray-200 hover:border-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 px-3 py-2 rounded-xl text-gray-700 hover:text-orange-600 font-medium hover:scale-105 text-sm md:text-base md:px-4"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Back to Form</span>
+                    <span className="sm:hidden">Back</span>
+                  </Button>
+                  <Button
+                    onClick={() => router.push('/')}
+                    variant="outline"
+                    className="flex items-center gap-2 bg-white/90 backdrop-blur-md hover:bg-white border-gray-200 hover:border-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 px-3 py-2 rounded-xl text-gray-700 hover:text-orange-600 font-medium hover:scale-105 text-sm md:text-base md:px-4"
+                  >
+                    <Home className="w-4 h-4" />
+                    <span className="hidden sm:inline">Home</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Centered Recipe Content */}
+              <div className="flex-1 flex items-center justify-center p-3 sm:p-6">
+                <div className="w-full max-w-4xl">
+                  {/* Recipe Display */}
+                  <div className="bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl border border-white/50 p-4 sm:p-6 md:p-8 animate-scaleIn">
+                    <div className="text-center mb-6 sm:mb-8">
+                      <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
+                        <ChefHat className={`w-6 h-6 sm:w-8 sm:h-8 text-orange-600 ${isGenerating ? 'animate-pulse' : ''}`} />
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent text-center">
+                          {isGenerating ? 'Cooking up something amazing...' : 'Your Perfect Recipe'}
+                        </h1>
+                        <Sparkles className={`w-6 h-6 sm:w-8 sm:h-8 text-purple-600 ${isGenerating ? 'animate-spin' : ''}`} />
+                      </div>
+                      
+                      {isGenerating && (
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+                          <div className="flex space-x-1">
+                            <div className="w-3 h-3 bg-orange-500 rounded-full animate-bounce"></div>
+                            <div className="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                            <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                          </div>
+                          <span className="text-gray-600 text-sm sm:text-base text-center">AI is analyzing your preferences and searching for the best techniques...</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="max-w-none">
+                      {(() => {
+                        console.log('Rendering recipe section. generatedRecipe length:', generatedRecipe.length);
+                        console.log('generatedRecipe truthy:', !!generatedRecipe);
+                        console.log('isGenerating:', isGenerating);
+                        return generatedRecipe ? (
+                          <RecipeDisplay recipe={generatedRecipe} isStreamingComplete={isStreamingComplete} />
+                        ) : (
+                          <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-xl p-8 border border-orange-100 text-center">
+                            <div className="flex items-center justify-center gap-3 text-gray-500">
+                              <ChefHat className="w-8 h-8 animate-pulse" />
+                              <span className="text-xl font-medium">Your recipe will appear here...</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {generatedRecipe && !isGenerating && (
+                      <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                        <Button 
+                          onClick={() => {
+                            const cleanText = generatedRecipe
+                              .replace(/^#{1,6}\s+/gm, '')
+                              .replace(/\*\*(.*?)\*\*/g, '$1')
+                              .replace(/\*(.*?)\*/g, '$1')
+                              .trim();
+                            navigator.clipboard.writeText(cleanText);
+                          }}
+                          variant="outline"
+                          className="text-orange-600 border-orange-300 hover:bg-orange-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                        >
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Copy Recipe
+                        </Button>
+                        <Button 
+                          onClick={handleReturnToForm}
+                          className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          <span className="hidden sm:inline">Generate Another Recipe</span>
+                          <span className="sm:hidden">Generate Another</span>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-            <span className="text-base">Back to Home</span>
-          </Button>
+          </div>
         </div>
+      ) : (
+        // Original Form View
+        <div className="container mx-auto px-6 py-8">
+          {/* Home Button */}
+          <div className="mb-8">
+            <Button
+              onClick={() => router.push('/')}
+              variant="outline"
+              className="flex items-center gap-3 bg-white/90 backdrop-blur-md hover:bg-white border-gray-200 hover:border-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 rounded-xl text-gray-700 hover:text-orange-600 font-medium hover:scale-105"
+            >
+              <div className="flex items-center gap-2">
+                <ArrowLeft className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" />
+                <Home className="w-5 h-5" />
+              </div>
+              <span className="text-base">Back to Home</span>
+            </Button>
+          </div>
 
         {/* Header */}
         <div className="text-center mb-8">
@@ -950,86 +1147,20 @@ export default function Dashboard() {
           </form>
         </Card>
 
-        {/* Error Display */}
-        {error && (
-          <Card className="max-w-4xl mx-auto mt-8 bg-red-50 border-red-200">
-            <div className="p-6">
-              <div className="flex items-center gap-2 text-red-700">
-                <X className="w-5 h-5" />
-                <span className="font-medium">Error</span>
-              </div>
-              <p className="text-red-600 mt-2">{error}</p>
-            </div>
-          </Card>
-        )}
-
-        {/* Recipe Display */}
-        {(generatedRecipe || isGenerating) && (
-          <Card className="max-w-4xl mx-auto mt-8 bg-white/90 backdrop-blur-md border-0 shadow-2xl">
-            <div className="p-8">
-              <div className="flex items-center gap-2 mb-6">
-                <ChefHat className={`w-6 h-6 text-orange-600 ${isGenerating ? 'animate-pulse' : ''}`} />
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {isGenerating ? 'Cooking up something amazing...' : 'Your Perfect Recipe'}
-                </h2>
-              </div>
-              
-              {isGenerating && (
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                  </div>
-                  <span className="text-gray-600 text-sm">AI is analyzing your preferences and searching for the best techniques...</span>
+          {/* Error Display */}
+          {error && (
+            <Card className="max-w-4xl mx-auto mt-8 bg-red-50 border-red-200">
+              <div className="p-6">
+                <div className="flex items-center gap-2 text-red-700">
+                  <X className="w-5 h-5" />
+                  <span className="font-medium">Error</span>
                 </div>
-              )}
-
-              <div className="max-w-none">
-                {generatedRecipe ? (
-                  <RecipeDisplay recipe={generatedRecipe} />
-                ) : (
-                  <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg p-6 border border-orange-100 text-center">
-                    <div className="flex items-center justify-center gap-2 text-gray-500">
-                      <ChefHat className="w-6 h-6 animate-pulse" />
-                      <span className="text-lg">Your recipe will appear here...</span>
-                    </div>
-                  </div>
-                )}
+                <p className="text-red-600 mt-2">{error}</p>
               </div>
-
-              {generatedRecipe && !isGenerating && (
-                <div className="mt-6 flex gap-3">
-                  <Button 
-                    onClick={() => {
-                      const cleanText = generatedRecipe
-                        .replace(/^#{1,6}\s+/gm, '')
-                        .replace(/\*\*(.*?)\*\*/g, '$1')
-                        .replace(/\*(.*?)\*/g, '$1')
-                        .trim();
-                      navigator.clipboard.writeText(cleanText);
-                    }}
-                    variant="outline"
-                    className="text-orange-600 border-orange-300 hover:bg-orange-50"
-                  >
-                    Copy Recipe
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      setGeneratedRecipe('');
-                      setError('');
-                    }}
-                    variant="outline"
-                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
-                  >
-                    Generate Another
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Card>
-        )}
-      </div>
+            </Card>
+          )}
+        </div>
+      )}
 
       <style jsx>{`
         .slider::-webkit-slider-thumb {
@@ -1063,15 +1194,21 @@ export default function Dashboard() {
           }
         }
 
-        .animate-fadeIn {
-          animation: fadeIn 0.6s ease-out forwards;
-          opacity: 0;
-        }
-
-        @keyframes slideIn {
+        @keyframes slideInUp {
           from {
             opacity: 0;
-            transform: translateX(-20px);
+            transform: translateY(30px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-30px);
           }
           to {
             opacity: 1;
@@ -1079,8 +1216,163 @@ export default function Dashboard() {
           }
         }
 
-        .animate-slideIn {
-          animation: slideIn 0.5s ease-out forwards;
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        @keyframes viewTransition {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+            backdrop-filter: blur(0px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+            backdrop-filter: blur(8px);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-out forwards;
+          opacity: 0;
+        }
+
+        .animate-slideInUp {
+          animation: slideInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .animate-slideInLeft {
+          animation: slideInLeft 0.6s ease-out forwards;
+        }
+
+        .animate-slideInRight {
+          animation: slideInRight 0.6s ease-out forwards;
+        }
+
+        .animate-scaleIn {
+          animation: scaleIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .animate-viewTransition {
+          animation: viewTransition 0.4s ease-out forwards;
+        }
+
+        /* Enhanced hover effects */
+        .card-hover {
+          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .card-hover:hover {
+          transform: translateY(-4px) scale(1.02);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Backdrop blur effect */
+        .recipe-backdrop {
+          backdrop-filter: blur(12px);
+          background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 640px) {
+          .animate-slideInUp {
+            animation-duration: 0.6s;
+          }
+          
+          .card-hover:hover {
+            transform: translateY(-2px) scale(1.01);
+          }
+          
+          .recipe-section {
+            margin-bottom: 1rem;
+          }
+          
+          .gradient-text-mobile {
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+          }
+        }
+
+        @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        @keyframes cardSlideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9) translateY(30px) rotateX(10deg);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0) rotateX(0deg);
+          }
+        }
+
+        @keyframes itemSlideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+
+        @keyframes stepSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        /* Enhanced card styles */
+        .recipe-card {
+          perspective: 1000px;
+        }
+
+        .recipe-title-card {
+          background: linear-gradient(135deg, #fef7cd 0%, #fed7aa 50%, #fce7f3 100%);
+          border: 2px solid transparent;
+          background-clip: padding-box;
+          position: relative;
+        }
+
+        .recipe-title-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          padding: 2px;
+          background: linear-gradient(135deg, #f59e0b, #ec4899);
+          border-radius: inherit;
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask-composite: xor;
+          z-index: -1;
         }
       `}</style>
     </div>
