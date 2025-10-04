@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Home, Book, Heart, User, Search, Sparkles } from "lucide-react";
+import { Home, Book, Heart, User, CreditCard, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import SignInModal from "@/components/sign-in-modal";
@@ -36,13 +36,13 @@ export default function Navbar() {
     {
       name: "Favorites",
       icon: Heart,
-      href: "/favorites",
+      sectionId: "favorites",
       gradient: "from-red-500 via-pink-500 to-rose-500"
     },
     {
-      name: "Discover",
-      icon: Search,
-      href: "/discover",
+      name: "Pricing",
+      icon: CreditCard,
+      href: "/pricing",
       gradient: "from-green-500 via-emerald-500 to-lime-500"
     },
     {
