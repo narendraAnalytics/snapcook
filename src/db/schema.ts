@@ -25,7 +25,7 @@ export const recipesTable = pgTable("recipes", {
   cookingTime: integer(),
   servings: integer(),
   plan: varchar({ length: 20 }).default('free').notNull(),
-  recipeNumber: serial(),
+  recipeNumber: integer().generatedAlwaysAsIdentity(),
   createdAt: timestamp().defaultNow().notNull(),
   updatedAt: timestamp().defaultNow().notNull(),
 });
