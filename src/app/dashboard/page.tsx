@@ -694,6 +694,9 @@ export default function Dashboard() {
           
           // Auto-save the generated recipe
           await autoSaveRecipe(accumulatedText);
+          
+          // Reset form states for next recipe
+          resetFormStates();
           break;
         }
         
@@ -719,6 +722,9 @@ export default function Dashboard() {
     setError('');
     setIsGenerating(false);
     setIsStreamingComplete(false);
+    
+    // Reset form states for new recipe
+    resetFormStates();
   };
 
   // Recipe storage functions
@@ -868,6 +874,21 @@ export default function Dashboard() {
     recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     recipe.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Function to reset all form states to initial values
+  const resetFormStates = () => {
+    setIngredients('');
+    setMaxCookingTime(30);
+    setCookingExperience('');
+    setSelectedHealthConditions([]);
+    setSelectedDietaryRestrictions([]);
+    setWeather('');
+    setMealType('');
+    setServings(2);
+    setSelectedEquipment([]);
+    setImageFile(null);
+    setInputMethod('text');
+  };
 
   // Load saved recipes on component mount
   useEffect(() => {
@@ -1083,11 +1104,11 @@ export default function Dashboard() {
             <Button
               onClick={() => router.push('/')}
               variant="outline"
-              className="flex items-center gap-3 bg-white/90 backdrop-blur-md hover:bg-white border-gray-200 hover:border-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 rounded-xl text-gray-700 hover:text-orange-600 font-medium hover:scale-105"
+              className="group flex items-center gap-3 bg-gradient-to-r from-orange-50 to-amber-100 hover:from-orange-100 hover:to-amber-200 border-orange-200 hover:border-orange-300 shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 rounded-xl text-orange-700 hover:text-orange-800 font-medium hover:scale-105"
             >
               <div className="flex items-center gap-2">
                 <ArrowLeft className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" />
-                <Home className="w-5 h-5" />
+                <Home className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
               </div>
               <span className="text-base">Back to Home</span>
             </Button>
