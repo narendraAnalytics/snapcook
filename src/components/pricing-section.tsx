@@ -6,7 +6,8 @@ import { Check, Star, Crown, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { PricingTable } from "@clerk/nextjs"
+import { SignedIn, SignedOut } from "@clerk/nextjs"
+import SignInModal from "@/components/sign-in-modal"
 
 const pricingPlans = [
   {
@@ -69,7 +70,7 @@ const pricingPlans = [
     popular: false,
     gradient: "from-purple-50 to-pink-50",
     borderGradient: "from-purple-300 to-pink-300",
-    buttonVariant: "secondary" as const
+    buttonVariant: "default" as const
   }
 ]
 
@@ -317,17 +318,43 @@ export default function PricingSection() {
                     transition={{ delay: 1 + index * 0.1 }}
                     className="w-full"
                   >
-                    <Button 
-                      variant={plan.buttonVariant}
-                      size="lg"
-                      className={`w-full font-semibold transition-all duration-300 ${
-                        plan.popular 
-                          ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105' 
-                          : 'hover:scale-105'
-                      }`}
-                    >
-                      {plan.name === 'Free' ? 'Get Started' : 'Subscribe Now'}
-                    </Button>
+                    <SignedOut>
+                      <SignInModal>
+                        <Button 
+                          variant={plan.buttonVariant}
+                          size="lg"
+                          className={`w-full font-semibold transition-all duration-300 ${
+                            plan.popular 
+                              ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105' 
+                              : plan.name === 'Max'
+                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                                : 'hover:scale-105'
+                          }`}
+                        >
+                          {plan.name === 'Free' ? 'Get Started' : 'Subscribe Now'}
+                        </Button>
+                      </SignInModal>
+                    </SignedOut>
+                    
+                    <SignedIn>
+                      <Button 
+                        variant={plan.buttonVariant}
+                        size="lg"
+                        className={`w-full font-semibold transition-all duration-300 ${
+                          plan.popular 
+                            ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105' 
+                            : plan.name === 'Max'
+                              ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                              : 'hover:scale-105'
+                        }`}
+                        onClick={() => {
+                          // Handle subscription logic for authenticated users
+                          console.log(`Subscribing to ${plan.name} plan`)
+                        }}
+                      >
+                        {plan.name === 'Free' ? 'Current Plan' : 'Subscribe Now'}
+                      </Button>
+                    </SignedIn>
                   </motion.div>
                 </CardFooter>
               </Card>
