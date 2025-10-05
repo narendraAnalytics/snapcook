@@ -42,7 +42,7 @@ export default function Navbar() {
     {
       name: "Pricing",
       icon: CreditCard,
-      href: "/pricing",
+      sectionId: "pricing",
       gradient: "from-green-500 via-emerald-500 to-lime-500"
     },
     {
