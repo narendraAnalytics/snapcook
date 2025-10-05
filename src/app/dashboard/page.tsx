@@ -25,6 +25,7 @@ import {
   Sparkles,
   Home,
   ArrowLeft,
+  ArrowRight,
   CookingPot,
   Timer,
   Lightbulb,
@@ -36,7 +37,9 @@ import {
   Menu,
   Search,
   Calendar,
-  Eye
+  Eye,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -70,6 +73,57 @@ export default function Dashboard() {
   const [showSavedRecipeView, setShowSavedRecipeView] = useState(false);
   const [savedRecipeContent, setSavedRecipeContent] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
+
+  // Carousel navigation states
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [carouselRef, setCarouselRef] = useState<HTMLDivElement | null>(null);
+
+  // Ingredient suggestions data
+  const ingredientSuggestions = [
+    {
+      id: 1,
+      title: "Healthy Stir-Fry",
+      ingredients: "chicken breast, broccoli, garlic, rice, onions",
+      emoji: "🥗",
+      category: "Healthy"
+    },
+    {
+      id: 2,
+      title: "Mediterranean Style",
+      ingredients: "salmon, lemon, asparagus, quinoa, olive oil",
+      emoji: "🐟",
+      category: "Mediterranean"
+    },
+    {
+      id: 3,
+      title: "Italian Comfort",
+      ingredients: "ground beef, tomatoes, onions, pasta, basil",
+      emoji: "🍝",
+      category: "Italian"
+    },
+    {
+      id: 4,
+      title: "Asian Fusion",
+      ingredients: "tofu, bell peppers, soy sauce, noodles, ginger",
+      emoji: "🍜",
+      category: "Asian"
+    },
+    {
+      id: 5,
+      title: "Breakfast Bowl",
+      ingredients: "eggs, spinach, cheese, mushrooms, avocado",
+      emoji: "🍳",
+      category: "Breakfast"
+    },
+    {
+      id: 6,
+      title: "Mexican Fiesta",
+      ingredients: "black beans, corn, bell peppers, lime, cilantro",
+      emoji: "🌮",
+      category: "Mexican"
+    }
+  ];
 
   // Function to extract recipe title using existing parseRecipe logic
   const extractRecipeTitle = (text: string): string => {
@@ -630,6 +684,35 @@ export default function Dashboard() {
       setSelectedItems(selectedItems.filter(i => i !== item));
     } else {
       setSelectedItems([...selectedItems, item]);
+    }
+  };
+
+  const handleSuggestionClick = (suggestionIngredients: string) => {
+    setIngredients(suggestionIngredients);
+  };
+
+  // Carousel navigation functions
+  const checkScrollButtons = () => {
+    if (carouselRef) {
+      const { scrollLeft, scrollWidth, clientWidth } = carouselRef;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const scrollLeft = () => {
+    if (carouselRef) {
+      const cardWidth = 220; // Approximate width of each card including gap
+      carouselRef.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+      setTimeout(checkScrollButtons, 300);
+    }
+  };
+
+  const scrollRight = () => {
+    if (carouselRef) {
+      const cardWidth = 220; // Approximate width of each card including gap
+      carouselRef.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      setTimeout(checkScrollButtons, 300);
     }
   };
 
@@ -1197,6 +1280,77 @@ export default function Dashboard() {
                       onChange={(e) => setIngredients(e.target.value)}
                       className="min-h-[120px] resize-none border-gray-200 focus:border-orange-400 focus:ring-orange-400 placeholder:text-gray-600"
                     />
+                    
+                    {/* Ingredient Suggestions */}
+                    <div className="mt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="w-4 h-4 text-orange-500" />
+                        <span className="text-sm font-medium text-gray-700">Need inspiration? Try these popular combinations:</span>
+                      </div>
+                      <div className="relative group">
+                        {/* Left Arrow */}
+                        <button
+                          onClick={scrollLeft}
+                          className={`carousel-arrow absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white border border-orange-200 hover:border-orange-300 rounded-full p-2 transition-all duration-300 hover:scale-110 ${
+                            canScrollLeft ? 'opacity-100 cursor-pointer' : 'opacity-30 cursor-not-allowed'
+                          }`}
+                          disabled={!canScrollLeft}
+                          type="button"
+                        >
+                          <ChevronLeft className="w-5 h-5 text-orange-600" />
+                        </button>
+
+                        {/* Right Arrow */}
+                        <button
+                          onClick={scrollRight}
+                          className={`carousel-arrow absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white border border-orange-200 hover:border-orange-300 rounded-full p-2 transition-all duration-300 hover:scale-110 ${
+                            canScrollRight ? 'opacity-100 cursor-pointer' : 'opacity-30 cursor-not-allowed'
+                          }`}
+                          disabled={!canScrollRight}
+                          type="button"
+                        >
+                          <ChevronRight className="w-5 h-5 text-orange-600" />
+                        </button>
+
+                        {/* Scrollable Container */}
+                        <div 
+                          ref={(ref) => {
+                            setCarouselRef(ref);
+                            if (ref) {
+                              ref.addEventListener('scroll', checkScrollButtons);
+                              // Initial check
+                              setTimeout(checkScrollButtons, 100);
+                            }
+                          }}
+                          className="carousel-container flex gap-3 overflow-x-auto pb-2 px-10"
+                        >
+                          {ingredientSuggestions.map((suggestion) => (
+                            <button
+                              key={suggestion.id}
+                              type="button"
+                              onClick={() => handleSuggestionClick(suggestion.ingredients)}
+                              className="flex-shrink-0 group relative bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 hover:from-orange-100 hover:via-pink-100 hover:to-purple-100 border border-orange-200 hover:border-orange-300 rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg min-w-[200px] text-left"
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-2xl">{suggestion.emoji}</span>
+                                <div>
+                                  <h4 className="font-semibold text-gray-800 text-sm group-hover:text-orange-700 transition-colors">
+                                    {suggestion.title}
+                                  </h4>
+                                  <span className="text-xs text-orange-600 font-medium bg-orange-100 px-2 py-1 rounded-full">
+                                    {suggestion.category}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 line-clamp-2 group-hover:text-gray-700 transition-colors">
+                                {suggestion.ingredients}
+                              </p>
+                              <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 via-pink-400/20 to-purple-400/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div>
@@ -1670,6 +1824,47 @@ export default function Dashboard() {
           -webkit-line-clamp: 3;
           -webkit-box-orient: vertical;
           overflow: hidden;
+        }
+
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* Carousel arrow enhancements */
+        .carousel-arrow {
+          backdrop-filter: blur(8px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .carousel-arrow:hover {
+          backdrop-filter: blur(12px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .carousel-arrow:disabled {
+          opacity: 0.3;
+          pointer-events: none;
+        }
+
+        /* Smooth scrolling for webkit browsers */
+        .carousel-container {
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .carousel-container::-webkit-scrollbar {
+          display: none;
+        }
+
+        .carousel-container {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
         
         .recipe-card {
