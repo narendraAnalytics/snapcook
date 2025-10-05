@@ -68,9 +68,11 @@ USER REQUIREMENTS:
 - Dietary restrictions: ${dietaryRestrictions || 'None specified'}
 - Available equipment: ${equipment || 'Standard kitchen equipment'}
 
+IMPORTANT: Start your response directly with the recipe title. Do not include greetings or introductions.
+
 REQUIRED PROFESSIONAL RECIPE FORMAT:
 
-**RECIPE TITLE** (Creative, restaurant-quality name that reflects the dish's character)
+**RECIPE TITLE** (Create an appetizing, creative name based on the ingredients - examples: "Creamy Garlic Parmesan Pasta", "Mediterranean Herb-Crusted Salmon", "Spicy Thai Basil Chicken Stir-Fry")
 
 **CHEF'S INSPIRATION** (Your professional insight into the dish's creation and health philosophy)
 
@@ -135,9 +137,11 @@ USER REQUIREMENTS:
 - Dietary restrictions: ${dietaryRestrictions || 'None specified'}
 - Available equipment: ${equipment || 'Standard kitchen equipment'}
 
+IMPORTANT: Start your response directly with the recipe title. Do not include greetings or introductions.
+
 REQUIRED PROFESSIONAL RECIPE FORMAT:
 
-**RECIPE TITLE** (Creative, restaurant-quality name that reflects the dish's character)
+**RECIPE TITLE** (Create an appetizing, creative name based on the ingredients - examples: "Creamy Garlic Parmesan Pasta", "Mediterranean Herb-Crusted Salmon", "Spicy Thai Basil Chicken Stir-Fry")
 
 **CHEF'S INSPIRATION** (Your professional insight into the dish's creation and health philosophy)
 

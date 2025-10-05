@@ -71,6 +71,13 @@ export default function Dashboard() {
   const [savedRecipeContent, setSavedRecipeContent] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
 
+  // Function to extract recipe title using existing parseRecipe logic
+  const extractRecipeTitle = (text: string): string => {
+    const sections = parseRecipe(text);
+    const titleSection = sections.find(section => section.type === 'title');
+    return titleSection?.content || 'Untitled Recipe';
+  };
+
   // Function to parse recipe into structured sections
   interface RecipeSection {
     type: 'title' | 'description' | 'ingredients' | 'instructions' | 'tips' | 'time' | 'text' | 'nutrition' | 'health' | 'pairing' | 'storage' | 'substitutions' | 'techniques' | 'difficulty';
@@ -746,10 +753,8 @@ export default function Dashboard() {
   // Auto-save function for generated recipes
   const autoSaveRecipe = async (recipeContent: string) => {
     try {
-      // Extract title from recipe
-      const lines = recipeContent.split('\n');
-      const titleLine = lines.find(line => line.trim() && !line.startsWith('*'));
-      const title = titleLine?.replace(/^\*\*|\*\*$/g, '').trim() || 'Untitled Recipe';
+      // Extract title using consistent method
+      const title = extractRecipeTitle(recipeContent);
       
       // Extract difficulty and cooking time if available
       const difficultyMatch = recipeContent.match(/difficulty[:\s]*([^\n]*)/i);
@@ -801,10 +806,8 @@ export default function Dashboard() {
     setSaveMessage('');
     
     try {
-      // Extract title from recipe
-      const lines = generatedRecipe.split('\n');
-      const titleLine = lines.find(line => line.trim() && !line.startsWith('*'));
-      const title = titleLine?.replace(/^\*\*|\*\*$/g, '').trim() || 'Untitled Recipe';
+      // Extract title using consistent method
+      const title = extractRecipeTitle(generatedRecipe);
       
       const recipeData = {
         title,
