@@ -6,17 +6,19 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import { Sparkles, ArrowRight, ChefHat } from "lucide-react";
 import Image from "next/image";
 import Autoplay from "embla-carousel-autoplay";
-import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
-import SignInModal from "@/components/sign-in-modal";
+import { SignedIn, SignedOut, useUser, SignInButton, useAuth } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function HeroSection() {
   const { user } = useUser();
+  const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
 
   // Loading state for navigation
   const [isLoading, setIsLoading] = useState(false);
+  const [authInProgress, setAuthInProgress] = useState(false);
 
   // Typewriter effect state
   const words = ["Optimized", "Simplified", "Perfected", "Enhanced", "Organized", "Streamlined"];
@@ -61,6 +63,18 @@ export default function HeroSection() {
 
     return () => clearInterval(cursorInterval);
   }, []);
+
+  // Monitor authentication completion
+  useEffect(() => {
+    if (isLoaded && isSignedIn && authInProgress) {
+      setAuthInProgress(false);
+      toast.success("🎉 Welcome! You're ready to create amazing recipes!");
+    }
+  }, [isLoaded, isSignedIn, authInProgress]);
+
+  const handleAuthStart = () => {
+    setAuthInProgress(true);
+  };
 
   // Handle navigation to dashboard with loading state
   const handleDashboardNavigation = async () => {
@@ -190,13 +204,23 @@ export default function HeroSection() {
             {/* Call to Action Button */}
             <Card className="p-6 bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl">
               <SignedOut>
-                <SignInModal>
-                  <Button className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group">
+                <SignInButton 
+                  mode="modal"
+                  forceRedirectUrl="/"
+                  signUpForceRedirectUrl="/"
+                >
+                  <Button 
+                    onClick={handleAuthStart}
+                    className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
+                    disabled={authInProgress}
+                  >
                     <ChefHat className="w-5 h-5 mr-2 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
-                    Discover Recipes
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-2 group-hover:scale-110 transition-all duration-300" />
+                    {authInProgress ? "Setting Up..." : "Discover Recipes"}
+                    {!authInProgress && (
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-2 group-hover:scale-110 transition-all duration-300" />
+                    )}
                   </Button>
-                </SignInModal>
+                </SignInButton>
               </SignedOut>
               <SignedIn>
                 <Button 

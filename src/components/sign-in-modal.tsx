@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { SignIn } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -13,10 +14,18 @@ interface SignInModalProps {
 export default function SignInModal({ children }: SignInModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { isSignedIn, user } = useUser();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Close modal when user is fully authenticated
+  useEffect(() => {
+    if (isSignedIn && user && isOpen) {
+      setIsOpen(false);
+    }
+  }, [isSignedIn, user, isOpen]);
 
   // Handle escape key press
   useEffect(() => {
@@ -87,7 +96,6 @@ export default function SignInModal({ children }: SignInModalProps) {
                     identityPreviewEditButton: "text-orange-500 hover:text-orange-600"
                   },
                 }}
-                redirectUrl={window.location.origin}
               />
             </div>
           </div>

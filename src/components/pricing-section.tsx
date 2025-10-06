@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Check, Star, Crown, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { SignedIn, SignedOut } from "@clerk/nextjs"
-import SignInModal from "@/components/sign-in-modal"
+import { SignedIn, SignedOut, SignInButton, useAuth } from "@clerk/nextjs"
+import { toast } from "sonner"
 
 const pricingPlans = [
   {
@@ -124,6 +124,20 @@ const featureVariants = {
 
 export default function PricingSection() {
   const [isYearly, setIsYearly] = useState(false)
+  const [authInProgress, setAuthInProgress] = useState(false)
+  const { isSignedIn, isLoaded } = useAuth()
+
+  // Monitor authentication completion
+  useEffect(() => {
+    if (isLoaded && isSignedIn && authInProgress) {
+      setAuthInProgress(false)
+      toast.success("🎉 Welcome! You're ready to create amazing recipes!")
+    }
+  }, [isLoaded, isSignedIn, authInProgress])
+
+  const handleAuthStart = () => {
+    setAuthInProgress(true)
+  }
 
   return (
     <section id="pricing" className="py-24 px-4 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
@@ -319,8 +333,13 @@ export default function PricingSection() {
                     className="w-full"
                   >
                     <SignedOut>
-                      <SignInModal>
+                      <SignInButton 
+                        mode="modal"
+                        forceRedirectUrl="/"
+                        signUpForceRedirectUrl="/"
+                      >
                         <Button 
+                          onClick={handleAuthStart}
                           variant={plan.buttonVariant}
                           size="lg"
                           className={`w-full font-semibold transition-all duration-300 ${
@@ -330,10 +349,11 @@ export default function PricingSection() {
                                 ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
                                 : 'hover:scale-105'
                           }`}
+                          disabled={authInProgress}
                         >
-                          {plan.name === 'Free' ? 'Get Started' : 'Subscribe Now'}
+                          {authInProgress ? 'Setting Up...' : (plan.name === 'Free' ? 'Get Started' : 'Subscribe Now')}
                         </Button>
-                      </SignInModal>
+                      </SignInButton>
                     </SignedOut>
                     
                     <SignedIn>

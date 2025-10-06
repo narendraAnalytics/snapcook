@@ -3,12 +3,27 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Home, Book, Heart, User, CreditCard, Sparkles } from "lucide-react";
-import { useState } from "react";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import SignInModal from "@/components/sign-in-modal";
+import { useState, useEffect } from "react";
+import { SignedIn, SignedOut, UserButton, SignInButton, useAuth } from "@clerk/nextjs";
+import { toast } from "sonner";
+import PlanStatusBadge from "@/components/plan-status-badge";
 
 export default function Navbar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [authInProgress, setAuthInProgress] = useState(false);
+  const { isSignedIn, isLoaded } = useAuth();
+
+  // Monitor authentication completion
+  useEffect(() => {
+    if (isLoaded && isSignedIn && authInProgress) {
+      setAuthInProgress(false);
+      toast.success("🎉 Welcome! You're ready to create amazing recipes!");
+    }
+  }, [isLoaded, isSignedIn, authInProgress]);
+
+  const handleAuthStart = () => {
+    setAuthInProgress(true);
+  };
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -75,6 +90,11 @@ export default function Navbar() {
             </h1>
             <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-400 to-pink-400 group-hover:w-full transition-all duration-500"></div>
           </div>
+          
+          {/* Plan Status Badge - only show when signed in */}
+          <SignedIn>
+            <PlanStatusBadge />
+          </SignedIn>
         </div>
 
         {/* Navigation Links */}
@@ -132,12 +152,20 @@ export default function Navbar() {
         {/* CTA Button */}
         <div className="hidden md:flex">
           <SignedOut>
-            <SignInModal>
-              <Button className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl border-0 shadow-none focus:border-0 focus:shadow-none transition-all duration-300 hover:scale-105">
+            <SignInButton 
+              mode="modal"
+              forceRedirectUrl="/"
+              signUpForceRedirectUrl="/"
+            >
+              <Button 
+                onClick={handleAuthStart}
+                className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl border-0 shadow-none focus:border-0 focus:shadow-none transition-all duration-300 hover:scale-105"
+                disabled={authInProgress}
+              >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Get Started
+                {authInProgress ? "Setting Up..." : "Get Started"}
               </Button>
-            </SignInModal>
+            </SignInButton>
           </SignedOut>
           <SignedIn>
             <UserButton 
