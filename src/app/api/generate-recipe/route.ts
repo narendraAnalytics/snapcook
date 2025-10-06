@@ -1,5 +1,10 @@
 import { GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import { getUserPlan } from '@/lib/get-user-plan';
+import { db } from '@/db';
+import { recipesTable } from '@/db/schema';
+import { eq, count } from 'drizzle-orm';
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -7,6 +12,44 @@ const ai = new GoogleGenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check user's plan and recipe limit
+    const userPlan = await getUserPlan(userId);
+    
+    // Count user's existing recipes
+    const result = await db
+      .select({ count: count() })
+      .from(recipesTable)
+      .where(eq(recipesTable.clerkId, userId));
+    
+    const recipeCount = result[0]?.count || 0;
+    
+    // Define limits based on plan
+    const planLimits = {
+      free: 2,
+      pro: 8,
+      max: -1 // Unlimited
+    };
+    
+    const limit = planLimits[userPlan as keyof typeof planLimits] || planLimits.free;
+    
+    // Check if user has reached their limit
+    if (limit !== -1 && recipeCount >= limit) {
+      return NextResponse.json({
+        error: 'Recipe limit reached',
+        message: `You've reached your ${userPlan} plan limit of ${limit} recipes. Please upgrade your plan to create more recipes.`,
+        recipeCount,
+        limit,
+        plan: userPlan
+      }, { status: 403 });
+    }
+
     const formData = await request.formData();
     
     // Extract form data

@@ -26,7 +26,7 @@ export const recipesTable = pgTable("recipes", {
   difficulty: varchar({ length: 50 }),
   cookingTime: integer(),
   servings: integer(),
-  recipeNumber: integer().generatedAlwaysAsIdentity(),
+  recipeNumber: integer().notNull(),
   createdAt: timestamp().defaultNow().notNull(),
   updatedAt: timestamp().defaultNow().notNull(),
 });

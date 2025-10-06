@@ -42,6 +42,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import RecipeLimitError from "@/components/recipe-limit-error";
+import { showRecipeUsageInfo } from "@/components/recipe-usage-info";
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -78,6 +80,15 @@ export default function Dashboard() {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [carouselRef, setCarouselRef] = useState<HTMLDivElement | null>(null);
+
+  // Recipe limit states
+  const [recipeCount, setRecipeCount] = useState(0);
+  const [recipeLimit, setRecipeLimit] = useState(-1);
+  const [userPlan, setUserPlan] = useState('free');
+  const [showLimitError, setShowLimitError] = useState(false);
+  const [isLimitReached, setIsLimitReached] = useState(false);
+  const [lastInfoShown, setLastInfoShown] = useState(0);
+  const [hasShownWelcomeMessage, setHasShownWelcomeMessage] = useState(false);
 
   // Ingredient suggestions data
   const ingredientSuggestions = [
@@ -723,6 +734,27 @@ export default function Dashboard() {
     }
   };
 
+  // Handler to show recipe usage info only once per session
+  const handleShowUsageInfo = (e?: React.MouseEvent | React.FocusEvent) => {
+    // Prevent event bubbling if event is provided
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    // Only show message if it hasn't been shown in this session
+    if (!hasShownWelcomeMessage) {
+      setHasShownWelcomeMessage(true);
+      showRecipeUsageInfo({
+        recipeCount,
+        limit: recipeLimit,
+        plan: userPlan,
+        onUpgrade: () => {
+          fetchRecipeCount(); // Refresh count after upgrade
+        }
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsGenerating(true);
@@ -763,6 +795,13 @@ export default function Dashboard() {
       });
 
       if (!response.ok) {
+        if (response.status === 403) {
+          // Handle recipe limit reached
+          const errorData = await response.json();
+          setShowLimitError(true);
+          setIsLimitReached(true);
+          return;
+        }
         throw new Error('Failed to generate recipe');
       }
 
@@ -873,8 +912,9 @@ export default function Dashboard() {
       const data = await response.json();
       if (data.success) {
         console.log('Recipe auto-saved successfully!', `Recipe #${data.recipe.recipeNumber}`);
-        // Refresh the saved recipes list
+        // Refresh the saved recipes list and recipe count
         fetchSavedRecipes();
+        fetchRecipeCount();
       }
     } catch (error) {
       console.error('Auto-save failed:', error);
@@ -976,10 +1016,27 @@ export default function Dashboard() {
     setInputMethod('text');
   };
 
-  // Load saved recipes on component mount
+  // Fetch recipe count and limit
+  const fetchRecipeCount = async () => {
+    try {
+      const response = await fetch('/api/user-recipe-count');
+      if (response.ok) {
+        const data = await response.json();
+        setRecipeCount(data.recipeCount);
+        setRecipeLimit(data.limit);
+        setUserPlan(data.plan);
+        setIsLimitReached(data.hasReachedLimit);
+      }
+    } catch (error) {
+      console.error('Failed to fetch recipe count:', error);
+    }
+  };
+
+  // Load saved recipes and recipe count on component mount
   useEffect(() => {
     if (user) {
       fetchSavedRecipes();
+      fetchRecipeCount();
     }
   }, [user]);
 
@@ -1249,6 +1306,7 @@ export default function Dashboard() {
                   variant={inputMethod === 'text' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setInputMethod('text')}
+                  disabled={isLimitReached}
                   className={inputMethod === 'text' ? 'bg-white shadow-sm text-orange-600' : 'text-gray-700 hover:text-orange-600'}
                 >
                   <Type className="w-4 h-4 mr-2" />
@@ -1259,6 +1317,7 @@ export default function Dashboard() {
                   variant={inputMethod === 'image' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setInputMethod('image')}
+                  disabled={isLimitReached}
                   className={inputMethod === 'image' ? 'bg-white shadow-sm text-orange-600' : 'text-gray-700 hover:text-orange-600'}
                 >
                   <Camera className="w-4 h-4 mr-2" />
@@ -1278,6 +1337,8 @@ export default function Dashboard() {
                       placeholder="e.g., chicken breast, broccoli, garlic, rice, onions..."
                       value={ingredients}
                       onChange={(e) => setIngredients(e.target.value)}
+                      onFocus={handleShowUsageInfo}
+                      disabled={isLimitReached}
                       className="min-h-[120px] resize-none border-gray-200 focus:border-orange-400 focus:ring-orange-400 placeholder:text-gray-600"
                     />
                     
@@ -1357,7 +1418,15 @@ export default function Dashboard() {
                     <Label className="text-sm font-semibold text-gray-800 mb-2 block">
                       Upload a photo of your ingredients
                     </Label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-orange-400 transition-colors">
+                    <div 
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-orange-400 transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        // Only show info if clicking on the container itself, not child elements
+                        if (e.target === e.currentTarget) {
+                          handleShowUsageInfo(e);
+                        }
+                      }}
+                    >
                       {imageFile ? (
                         <div className="space-y-2">
                           <div className="flex items-center justify-center gap-2">
@@ -1382,11 +1451,12 @@ export default function Dashboard() {
                               type="file"
                               accept="image/*"
                               onChange={handleImageUpload}
+                              disabled={isLimitReached}
                               className="hidden"
                               id="image-upload"
                             />
-                            <label htmlFor="image-upload" className="cursor-pointer">
-                              <Button type="button" variant="outline" className="mb-2 text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400 bg-white hover:bg-orange-50" asChild>
+                            <label htmlFor="image-upload" className={isLimitReached ? "cursor-not-allowed" : "cursor-pointer"}>
+                              <Button type="button" variant="outline" disabled={isLimitReached} className="mb-2 text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400 bg-white hover:bg-orange-50" asChild>
                                 <span>
                                   <Camera className="w-4 h-4 mr-2" />
                                   Choose Photo
@@ -1629,18 +1699,36 @@ export default function Dashboard() {
 
             {/* Submit Button */}
             <div className="pt-6">
+              {userPlan === 'free' && recipeLimit > 0 && (
+                <div className="mb-3 text-center">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium text-orange-600">{recipeCount}/{recipeLimit}</span> recipes used this month
+                  </p>
+                </div>
+              )}
+              
               <Button
                 type="submit"
-                disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:scale-100"
+                disabled={isGenerating || isLimitReached}
+                onClick={isLimitReached ? () => setShowLimitError(true) : undefined}
+                className={`w-full py-4 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 group disabled:cursor-not-allowed disabled:hover:scale-100 ${
+                  isLimitReached 
+                    ? 'bg-gray-400 hover:bg-gray-500 text-white disabled:opacity-75' 
+                    : 'bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white hover:shadow-2xl hover:scale-105 disabled:opacity-75'
+                }`}
               >
                 <Sparkles className={`w-5 h-5 mr-2 transition-all duration-300 ${
                   isGenerating 
                     ? 'animate-spin' 
                     : 'group-hover:rotate-12 group-hover:scale-110'
                 }`} />
-                {isGenerating ? 'Generating Your Perfect Recipe...' : 'Generate My Perfect Recipe'}
-                {!isGenerating && (
+                {isGenerating 
+                  ? 'Generating Your Perfect Recipe...' 
+                  : isLimitReached 
+                    ? `Recipe Limit Reached (${recipeCount}/${recipeLimit})`
+                    : 'Generate My Perfect Recipe'
+                }
+                {!isGenerating && !isLimitReached && (
                   <ChefHat className="w-5 h-5 ml-2 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
                 )}
               </Button>
@@ -2113,6 +2201,18 @@ export default function Dashboard() {
           z-index: -1;
         }
       `}</style>
+
+      {/* Recipe Limit Error Modal */}
+      <RecipeLimitError
+        isOpen={showLimitError}
+        onClose={() => setShowLimitError(false)}
+        recipeCount={recipeCount}
+        limit={recipeLimit}
+        plan={userPlan}
+        onUpgrade={() => {
+          fetchRecipeCount(); // Refresh count after upgrade
+        }}
+      />
     </div>
   );
 }

@@ -105,16 +105,16 @@ export default function HeroSection() {
             opacity: 1;
           }
           25% {
-            transform: rotate(90deg) scale(1.2);
-            opacity: 0.8;
+            transform: rotate(90deg) scale(1.1);
+            opacity: 0.9;
           }
           50% {
-            transform: rotate(180deg) scale(1.4);
-            opacity: 0.6;
+            transform: rotate(180deg) scale(1.2);
+            opacity: 0.8;
           }
           75% {
-            transform: rotate(270deg) scale(1.2);
-            opacity: 0.8;
+            transform: rotate(270deg) scale(1.1);
+            opacity: 0.9;
           }
           100% {
             transform: rotate(360deg) scale(1);
@@ -123,7 +123,7 @@ export default function HeroSection() {
         }
         
         .animate-chef-loading {
-          animation: chef-loading 1s ease-in-out infinite;
+          animation: chef-loading 0.8s ease-in-out infinite;
         }
       `}</style>
       <section id="home" className="relative overflow-hidden min-h-[500px]">

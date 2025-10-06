@@ -86,28 +86,43 @@ export default function PlanStatusBadge() {
     }
   }, [user]);
 
-  // Function to simulate plan upgrade (for demonstration)
+  // Function to handle real plan upgrades
+  const handlePlanUpgrade = async (newPlan: PlanType) => {
+    try {
+      const response = await fetch('/api/update-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ plan: newPlan }),
+      });
+
+      if (response.ok) {
+        const { plan } = await response.json();
+        setCurrentPlan(plan);
+        toast.success(`🎉 Successfully upgraded to ${plan.toUpperCase()} plan!`);
+      } else {
+        toast.error("❌ Failed to upgrade plan. Please try again.");
+      }
+    } catch (error) {
+      console.error('Error upgrading plan:', error);
+      toast.error("❌ Failed to upgrade plan. Please try again.");
+    }
+  };
+
   const handlePlanClick = () => {
     if (currentPlan === "free") {
       toast.info("✨ Upgrade to Pro for more recipes and features!", {
         action: {
           label: "Upgrade",
-          onClick: () => {
-            // Simulate upgrade
-            setCurrentPlan("pro");
-            toast.success("🎉 Upgraded to Pro plan!");
-          }
+          onClick: () => handlePlanUpgrade("pro")
         }
       });
     } else if (currentPlan === "pro") {
       toast.info("👑 Upgrade to Max for unlimited access!", {
         action: {
           label: "Upgrade",
-          onClick: () => {
-            // Simulate upgrade
-            setCurrentPlan("max");
-            toast.success("🎉 Upgraded to Max plan!");
-          }
+          onClick: () => handlePlanUpgrade("max")
         }
       });
     } else {
