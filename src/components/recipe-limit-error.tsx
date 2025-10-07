@@ -91,7 +91,10 @@ export default function RecipeLimitError({
               You've created <span className="font-semibold text-orange-600">{recipeCount} recipes</span> on your{" "}
               <span className="font-semibold capitalize">{plan}</span> plan.
               <span className="block mt-1">
-                Upgrade to create unlimited amazing recipes!
+                {plan === 'pro' 
+                  ? 'Upgrade to Max plan for unlimited amazing recipes!' 
+                  : 'Upgrade to create unlimited amazing recipes!'
+                }
               </span>
             </p>
           </div>
@@ -100,21 +103,23 @@ export default function RecipeLimitError({
           <div className="space-y-3">
             <div className="text-center">
               <p className="text-sm font-medium text-gray-700 mb-3">
-                Choose your upgrade:
+                {plan === 'pro' ? 'Upgrade to continue:' : 'Choose your upgrade:'}
               </p>
             </div>
 
-            {/* Pro Plan Option */}
-            <Button
-              onClick={() => handleUpgrade('pro')}
-              disabled={isUpgrading}
-              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-xl transition-all duration-300 group disabled:opacity-75 disabled:cursor-not-allowed"
-            >
-              <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
-              {isUpgrading ? 'Upgrading...' : 'Upgrade to Pro (8 recipes)'}
-            </Button>
+            {/* Pro Plan Option - Only show for Free users */}
+            {plan === 'free' && (
+              <Button
+                onClick={() => handleUpgrade('pro')}
+                disabled={isUpgrading}
+                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-xl transition-all duration-300 group disabled:opacity-75 disabled:cursor-not-allowed"
+              >
+                <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
+                {isUpgrading ? 'Upgrading...' : 'Upgrade to Pro (8 recipes)'}
+              </Button>
+            )}
 
-            {/* Max Plan Option */}
+            {/* Max Plan Option - Show for both Free and Pro users */}
             <Button
               onClick={() => handleUpgrade('max')}
               disabled={isUpgrading}
@@ -128,13 +133,24 @@ export default function RecipeLimitError({
           {/* Feature highlights */}
           <div className="bg-gray-50 rounded-lg p-3 space-y-2">
             <p className="text-xs font-medium text-gray-700">
-              ✨ Upgrade benefits:
+              ✨ {plan === 'pro' ? 'Max plan benefits:' : 'Upgrade benefits:'}
             </p>
             <ul className="text-xs text-gray-600 space-y-1">
-              <li>• Unlimited recipe generation</li>
-              <li>• Priority customer support</li>
-              <li>• Advanced recipe customization</li>
-              <li>• Export recipes to PDF</li>
+              {plan === 'pro' ? (
+                <>
+                  <li>• Unlimited recipe generation</li>
+                  <li>• API access for developers</li>
+                  <li>• Recipe video generation</li>
+                  <li>• Premium support</li>
+                </>
+              ) : (
+                <>
+                  <li>• More recipes per month</li>
+                  <li>• Priority customer support</li>
+                  <li>• Advanced recipe customization</li>
+                  <li>• Nutritional information</li>
+                </>
+              )}
             </ul>
           </div>
 

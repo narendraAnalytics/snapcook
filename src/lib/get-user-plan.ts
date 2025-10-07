@@ -1,18 +1,19 @@
-import { db } from '@/db';
-import { usersTable } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { auth } from '@clerk/nextjs/server';
 
-export async function getUserPlan(clerkId: string): Promise<string> {
+export async function getUserPlan(): Promise<string> {
   try {
-    const result = await db
-      .select({ plan: usersTable.plan })
-      .from(usersTable)
-      .where(eq(usersTable.clerkId, clerkId))
-      .limit(1);
+    const { has } = await auth();
     
-    return result[0]?.plan || 'free';
+    // Check Clerk billing plans in order of priority
+    if (has({ plan: 'max' })) {
+      return 'max';
+    } else if (has({ plan: 'pro' })) {
+      return 'pro';
+    } else {
+      return 'free';
+    }
   } catch (error) {
-    console.error('Error fetching user plan:', error);
+    console.error('Error fetching user plan from Clerk:', error);
     return 'free'; // Default fallback
   }
 }

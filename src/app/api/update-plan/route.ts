@@ -19,23 +19,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid plan type' }, { status: 400 });
     }
     
-    // Update user plan in database
-    const result = await db
+    // Update user plan in database - same pattern as user-sync.ts
+    const updatedUser = await db
       .update(usersTable)
-      .set({ 
+      .set({
         plan: plan,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(usersTable.clerkId, userId))
-      .returning({ id: usersTable.id, plan: usersTable.plan });
+      .returning();
     
-    if (result.length === 0) {
+    if (updatedUser.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     
     return NextResponse.json({ 
       success: true, 
-      plan: result[0].plan,
+      plan: updatedUser[0].plan,
       message: `Plan updated to ${plan}` 
     });
     

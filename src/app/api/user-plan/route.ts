@@ -1,16 +1,9 @@
-import { auth } from '@clerk/nextjs/server';
 import { getUserPlan } from '@/lib/get-user-plan';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
-    const plan = await getUserPlan(userId);
+    const plan = await getUserPlan();
     
     return NextResponse.json({ plan });
   } catch (error) {

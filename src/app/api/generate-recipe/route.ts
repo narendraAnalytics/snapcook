@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check user's plan and recipe limit
-    const userPlan = await getUserPlan(userId);
+    const userPlan = await getUserPlan();
     
     // Count user's existing recipes
     const result = await db

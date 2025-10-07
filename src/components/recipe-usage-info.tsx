@@ -16,13 +16,37 @@ interface RecipeUsageInfoProps {
 
 export function showRecipeUsageInfo({ recipeCount, limit, plan, onUpgrade }: RecipeUsageInfoProps) {
   const getInfoMessage = () => {
-    if (plan !== 'free') {
-      // For pro/max users, show a simple success message
+    // For max users, show unlimited message
+    if (plan === 'max') {
       return {
-        title: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan Active! 🎉`,
-        message: plan === 'max' ? "Unlimited recipes at your fingertips!" : `Create up to ${limit} recipes per month!`,
+        title: "Max Plan Active! 🎉",
+        message: "Unlimited recipes at your fingertips!",
         variant: "success" as const
       };
+    }
+
+    // For pro users, show detailed usage tracking
+    if (plan === 'pro') {
+      if (recipeCount === 0) {
+        return {
+          title: "Welcome to SnapCook Pro! 🎉",
+          message: `You're on the Pro plan with ${limit} recipes per month. Start creating amazing recipes!`,
+          variant: "success" as const
+        };
+      } else if (recipeCount < limit) {
+        const remaining = limit - recipeCount;
+        return {
+          title: `Great Progress! ⭐`,
+          message: `${recipeCount}/${limit} recipes used. ${remaining} recipe${remaining > 1 ? 's' : ''} remaining this month!`,
+          variant: "success" as const
+        };
+      } else {
+        return {
+          title: "Pro Recipes Used! 🔥",
+          message: `You've created ${recipeCount}/${limit} recipes this month. Upgrade to Max for unlimited recipes!`,
+          variant: "warning" as const
+        };
+      }
     }
 
     // For free users, show different messages based on usage
@@ -54,29 +78,13 @@ export function showRecipeUsageInfo({ recipeCount, limit, plan, onUpgrade }: Rec
     if (onUpgrade) {
       onUpgrade();
     } else {
-      // Fallback upgrade logic
+      // Redirect to pricing page for Clerk billing
       toast.info("✨ Upgrade to Pro for more recipes!", {
+        description: "Visit the pricing page to upgrade through Clerk billing.",
         action: {
-          label: "Upgrade",
-          onClick: async () => {
-            try {
-              const response = await fetch('/api/update-plan', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ plan: 'pro' }),
-              });
-
-              if (response.ok) {
-                toast.success("🎉 Successfully upgraded to PRO plan!");
-              } else {
-                toast.error("❌ Failed to upgrade plan. Please try again.");
-              }
-            } catch (error) {
-              console.error('Error upgrading plan:', error);
-              toast.error("❌ Failed to upgrade plan. Please try again.");
-            }
+          label: "View Pricing",
+          onClick: () => {
+            window.location.href = "#pricing";
           }
         }
       });

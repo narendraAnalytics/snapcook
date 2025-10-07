@@ -21,7 +21,7 @@ export async function syncUserToDatabase() {
       .limit(1)
 
     if (existingUser.length > 0) {
-      // User exists, update their information
+      // User exists, update their information but preserve plan
       const updatedUser = await db
         .update(usersTable)
         .set({
@@ -31,6 +31,8 @@ export async function syncUserToDatabase() {
           email: clerkUser.emailAddresses[0]?.emailAddress || '',
           profileImage: clerkUser.imageUrl || null,
           updatedAt: new Date(),
+          // Keep existing plan - don't overwrite it
+          plan: existingUser[0].plan,
         })
         .where(eq(usersTable.clerkId, userId))
         .returning()

@@ -58,7 +58,7 @@ const planConfigs: Record<PlanType, PlanConfig> = {
 
 export default function PlanStatusBadge() {
   const { user } = useUser();
-  const [currentPlan, setCurrentPlan] = useState<PlanType>("free");
+  const [currentPlan, setCurrentPlan] = useState<PlanType | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   // Fetch actual user plan from database
@@ -86,51 +86,22 @@ export default function PlanStatusBadge() {
     }
   }, [user]);
 
-  // Function to handle real plan upgrades
-  const handlePlanUpgrade = async (newPlan: PlanType) => {
-    try {
-      const response = await fetch('/api/update-plan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ plan: newPlan }),
-      });
-
-      if (response.ok) {
-        const { plan } = await response.json();
-        setCurrentPlan(plan);
-        toast.success(`🎉 Successfully upgraded to ${plan.toUpperCase()} plan!`);
-      } else {
-        toast.error("❌ Failed to upgrade plan. Please try again.");
-      }
-    } catch (error) {
-      console.error('Error upgrading plan:', error);
-      toast.error("❌ Failed to upgrade plan. Please try again.");
-    }
-  };
 
   const handlePlanClick = () => {
     if (currentPlan === "free") {
       toast.info("✨ Upgrade to Pro for more recipes and features!", {
-        action: {
-          label: "Upgrade",
-          onClick: () => handlePlanUpgrade("pro")
-        }
+        description: "Visit the pricing page to upgrade your plan through Clerk billing."
       });
     } else if (currentPlan === "pro") {
       toast.info("👑 Upgrade to Max for unlimited access!", {
-        action: {
-          label: "Upgrade",
-          onClick: () => handlePlanUpgrade("max")
-        }
+        description: "Visit the pricing page to upgrade to the Max plan."
       });
     } else {
       toast.success("👑 You're on the Max plan - enjoying unlimited access!");
     }
   };
 
-  if (!user || !isVisible) return null;
+  if (!user || !isVisible || !currentPlan) return null;
 
   const config = planConfigs[currentPlan];
 
@@ -158,16 +129,7 @@ export default function PlanStatusBadge() {
         <div className={`flex items-center gap-1.5 relative z-10 ${config.animation}`}>
           {config.icon}
           <span>
-            {currentPlan === "free" ? (
-              <>
-                {config.name}
-                <span className="ml-1 text-yellow-200 font-bold animate-pulse">
-                  [UPGRADE TO PRO]
-                </span>
-              </>
-            ) : (
-              config.name
-            )}
+            {config.name}
           </span>
         </div>
         

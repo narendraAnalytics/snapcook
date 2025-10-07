@@ -84,7 +84,7 @@ export default function Dashboard() {
   // Recipe limit states
   const [recipeCount, setRecipeCount] = useState(0);
   const [recipeLimit, setRecipeLimit] = useState(-1);
-  const [userPlan, setUserPlan] = useState('free');
+  const [userPlan, setUserPlan] = useState('');
   const [showLimitError, setShowLimitError] = useState(false);
   const [isLimitReached, setIsLimitReached] = useState(false);
   const [lastInfoShown, setLastInfoShown] = useState(0);
@@ -740,9 +740,9 @@ export default function Dashboard() {
     if (e) {
       e.stopPropagation();
     }
-    
-    // Only show message if it hasn't been shown in this session
-    if (!hasShownWelcomeMessage) {
+
+    // Only show message if it hasn't been shown in this session and plan data is loaded
+    if (!hasShownWelcomeMessage && userPlan) {
       setHasShownWelcomeMessage(true);
       showRecipeUsageInfo({
         recipeCount,
@@ -1125,21 +1125,6 @@ export default function Dashboard() {
                           </div>
                         )}
                         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-                          <Button 
-                            onClick={() => {
-                              const cleanText = generatedRecipe
-                                .replace(/^#{1,6}\s+/gm, '')
-                                .replace(/\*\*(.*?)\*\*/g, '$1')
-                                .replace(/\*(.*?)\*/g, '$1')
-                                .trim();
-                              navigator.clipboard.writeText(cleanText);
-                            }}
-                            variant="outline"
-                            className="text-orange-600 border-orange-300 hover:bg-orange-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
-                          >
-                            <Sparkles className="w-4 h-4 mr-2" />
-                            Copy Recipe
-                          </Button>
                           <div className="flex items-center gap-2 bg-green-50 border border-green-200 px-4 py-2 rounded-xl">
                             <CheckCircle className="w-4 h-4 text-green-600" />
                             <span className="text-green-700 font-medium text-sm">Auto-saved to My Recipes</span>
@@ -1209,21 +1194,6 @@ export default function Dashboard() {
                     </div>
 
                     <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-                      <Button 
-                        onClick={() => {
-                          const cleanText = savedRecipeContent
-                            .replace(/^#{1,6}\\s+/gm, '')
-                            .replace(/\\*\\*(.*?)\\*\\*/g, '$1')
-                            .replace(/\\*(.*?)\\*/g, '$1')
-                            .trim();
-                          navigator.clipboard.writeText(cleanText);
-                        }}
-                        variant="outline"
-                        className="text-orange-600 border-orange-300 hover:bg-orange-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Copy Recipe
-                      </Button>
                       <Button 
                         onClick={handleBackToDashboard}
                         className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm sm:text-base"
@@ -1699,7 +1669,7 @@ export default function Dashboard() {
 
             {/* Submit Button */}
             <div className="pt-6">
-              {userPlan === 'free' && recipeLimit > 0 && (
+              {userPlan !== 'max' && recipeLimit > 0 && (
                 <div className="mb-3 text-center">
                   <p className="text-sm text-gray-600">
                     <span className="font-medium text-orange-600">{recipeCount}/{recipeLimit}</span> recipes used this month
