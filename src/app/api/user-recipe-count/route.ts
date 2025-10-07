@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's current plan
-    const userPlan = await getUserPlan(userId);
+    const userPlan = await getUserPlan();
     
     // Count total recipes for this user
     const result = await db
